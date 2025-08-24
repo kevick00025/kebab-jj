@@ -1,40 +1,35 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import heroImage from '@/assets/hero-grilled-meat.jpg';
+import { ArrowRight, ChefHat } from 'lucide-react';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  useEffect(() => {
+    // Accesso automatico senza credenziali dopo 2 secondi
+    const timer = setTimeout(() => {
+      localStorage.setItem('isAuthenticated', 'true');
+      toast({
+        title: "Accesso effettuato!",
+        description: "Benvenuto nel sistema di gestione coupon.",
+      });
+      navigate('/dashboard');
+    }, 2000);
 
-    // Simulazione autenticazione
-    setTimeout(() => {
-      if (username === 'admin' && password === 'spice2024') {
-        localStorage.setItem('isAuthenticated', 'true');
-        toast({
-          title: "Accesso effettuato!",
-          description: "Benvenuto nel sistema di gestione coupon.",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Accesso negato",
-          description: "Credenziali non valide. Riprova.",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  const handleDirectAccess = () => {
+    localStorage.setItem('isAuthenticated', 'true');
+    toast({
+      title: "Accesso effettuato!",
+      description: "Benvenuto nel sistema di gestione coupon.",
+    });
+    navigate('/dashboard');
   };
 
   return (
@@ -58,70 +53,70 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-montserrat font-bold text-spice-red mb-2">
-              Spice & Serve
-            </h1>
-            <p className="text-elegant-anthracite/70 font-roboto">
+            <div className="flex items-center justify-center mb-4">
+              <ChefHat className="h-12 w-12 text-spice-red mr-2" />
+              <h1 className="text-4xl font-montserrat font-bold text-spice-red">
+                Spice & Serve
+              </h1>
+            </div>
+            <p className="text-elegant-anthracite/70 font-roboto text-lg">
               Sistema di Gestione Coupon
             </p>
           </div>
 
-          {/* Login Card */}
+          {/* Welcome Card */}
           <Card className="shadow-2xl border-0 bg-background/95 backdrop-blur-sm">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-montserrat font-semibold text-center text-elegant-anthracite">
-                Accedi al Pannello
+                Benvenuto nella Demo
               </CardTitle>
               <CardDescription className="text-center text-muted-foreground">
-                Inserisci le tue credenziali per continuare
+                Il sistema si avvierà automaticamente o puoi procedere manualmente
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="font-roboto font-medium">
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Inserisci username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="h-11 font-roboto border-smoke-gray-dark focus:border-spice-red focus:ring-spice-red"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="font-roboto font-medium">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Inserisci password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-11 font-roboto border-smoke-gray-dark focus:border-spice-red focus:ring-spice-red"
-                    required
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-11 bg-spice-red hover:bg-spice-red-dark text-white font-montserrat font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Accesso in corso...' : 'Accedi'}
-                </Button>
-              </form>
-              
-              {/* Demo Credentials */}
-              <div className="mt-6 p-3 bg-mint-green/10 rounded-lg border border-mint-green/20">
-                <p className="text-xs font-roboto text-elegant-anthracite/70 text-center">
-                  <strong>Demo:</strong> Username: admin | Password: spice2024
+            <CardContent className="space-y-6">
+              {/* Auto Access Info */}
+              <div className="text-center p-4 bg-mint-green/10 rounded-lg border border-mint-green/20">
+                <p className="text-sm font-roboto text-elegant-anthracite/80">
+                  ⏱️ <strong>Accesso automatico in corso...</strong>
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Verrai reindirizzato alla dashboard tra pochi secondi
+                </p>
+              </div>
+
+              {/* Manual Access Button */}
+              <Button
+                onClick={handleDirectAccess}
+                className="w-full h-12 bg-spice-red hover:bg-spice-red-dark text-white font-montserrat font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Accedi Subito alla Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+
+              {/* Features Preview */}
+              <div className="space-y-3">
+                <h4 className="font-montserrat font-semibold text-elegant-anthracite text-center">
+                  Funzionalità Disponibili:
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-sm font-roboto">
+                  <div className="flex items-center text-muted-foreground">
+                    <div className="w-2 h-2 bg-spice-red rounded-full mr-2"></div>
+                    Crea Coupon
+                  </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <div className="w-2 h-2 bg-turmeric-yellow rounded-full mr-2"></div>
+                    Gestisci Promozioni
+                  </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <div className="w-2 h-2 bg-mint-green rounded-full mr-2"></div>
+                    Statistiche
+                  </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <div className="w-2 h-2 bg-elegant-anthracite rounded-full mr-2"></div>
+                    Report Avanzati
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
