@@ -18,7 +18,35 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'montserrat': ['Montserrat', 'sans-serif'],
+				'roboto': ['Roboto', 'sans-serif'],
+			},
 			colors: {
+				// Palette Speziata
+				'spice': {
+					'red': 'hsl(var(--spice-red))',
+					'red-light': 'hsl(var(--spice-red-light))',
+					'red-dark': 'hsl(var(--spice-red-dark))',
+				},
+				'turmeric': {
+					'yellow': 'hsl(var(--turmeric-yellow))',
+					'yellow-light': 'hsl(var(--turmeric-yellow-light))',
+					'yellow-dark': 'hsl(var(--turmeric-yellow-dark))',
+				},
+				'smoke': {
+					'gray': 'hsl(var(--smoke-gray))',
+					'gray-dark': 'hsl(var(--smoke-gray-dark))',
+				},
+				'elegant': {
+					'anthracite': 'hsl(var(--elegant-anthracite))',
+					'anthracite-light': 'hsl(var(--elegant-anthracite-light))',
+				},
+				'mint': {
+					'green': 'hsl(var(--mint-green))',
+					'green-light': 'hsl(var(--mint-green-light))',
+				},
+				// Semantic tokens
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

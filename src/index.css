@@ -2,41 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Design System per Spice & Serve - Gestione Coupon
+Palette Speziata: Rosso, Giallo, Grigio, Antracite, Verde Menta
 */
 
 @layer base {
   :root {
+    /* Palette Speziata */
+    --spice-red: 0 76% 47%; /* #C62828 - Rosso Speziato */
+    --spice-red-light: 0 76% 55%;
+    --spice-red-dark: 0 76% 40%;
+    
+    --turmeric-yellow: 43 100% 50%; /* #FFB300 - Giallo Curcuma */
+    --turmeric-yellow-light: 43 100% 60%;
+    --turmeric-yellow-dark: 43 100% 45%;
+    
+    --smoke-gray: 0 0% 96%; /* #F5F5F5 - Grigio Fumo */
+    --smoke-gray-dark: 0 0% 90%;
+    
+    --elegant-anthracite: 0 0% 13%; /* #212121 - Antracite Elegante */
+    --elegant-anthracite-light: 0 0% 20%;
+    
+    --mint-green: 122 33% 58%; /* #66BB6A - Verde Menta */
+    --mint-green-light: 122 33% 65%;
+    
+    /* Semantic tokens */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: var(--elegant-anthracite);
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: var(--elegant-anthracite);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: var(--elegant-anthracite);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--spice-red);
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--turmeric-yellow);
+    --secondary-foreground: var(--elegant-anthracite);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: var(--smoke-gray);
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--mint-green);
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 100%;
+    --ring: var(--spice-red);
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+    
+    /* Gradients */
+    --gradient-spice: linear-gradient(135deg, hsl(var(--spice-red)), hsl(var(--spice-red-dark)));
+    --gradient-warm: linear-gradient(135deg, hsl(var(--turmeric-yellow)), hsl(var(--turmeric-yellow-dark)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--spice-red)), hsl(var(--turmeric-yellow)));
+    
+    /* Shadows */
+    --shadow-elegant: 0 4px 20px -2px hsl(var(--spice-red) / 0.1);
+    --shadow-card: 0 2px 10px -2px hsl(0 0% 0% / 0.1);
+    --shadow-button: 0 2px 8px -1px hsl(var(--spice-red) / 0.2);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
