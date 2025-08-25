@@ -26,7 +26,7 @@ export const Header = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <h1 className="text-xl md:text-2xl font-montserrat font-bold text-spice-red">
-              Spice & Serve
+              Kebab JJ
             </h1>
             <span className="hidden sm:inline text-xs md:text-sm font-roboto opacity-75">
               | Dashboard Coupon

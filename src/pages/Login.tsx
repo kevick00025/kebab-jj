@@ -1,35 +1,36 @@
-import { useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-grilled-meat.jpg';
-import { ArrowRight, ChefHat } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Accesso automatico senza credenziali dopo 2 secondi
-    const timer = setTimeout(() => {
-      localStorage.setItem('isAuthenticated', 'true');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
       toast({
-        title: "Accesso effettuato!",
-        description: "Benvenuto nel sistema di gestione coupon.",
+        title: 'Errore di accesso',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Accesso effettuato!',
+        description: 'Benvenuto su Kebab JJ.',
       });
       navigate('/dashboard');
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [navigate]);
-
-  const handleDirectAccess = () => {
-    localStorage.setItem('isAuthenticated', 'true');
-    toast({
-      title: "Accesso effettuato!",
-      description: "Benvenuto nel sistema di gestione coupon.",
-    });
-    navigate('/dashboard');
+    }
   };
 
   return (
@@ -44,10 +45,8 @@ const Login = () => {
           filter: 'blur(2px)'
         }}
       />
-      
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-smoke-gray/90 to-background/95" />
-      
       {/* Content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md">
@@ -56,68 +55,47 @@ const Login = () => {
             <div className="flex items-center justify-center mb-4">
               <ChefHat className="h-12 w-12 text-spice-red mr-2" />
               <h1 className="text-4xl font-montserrat font-bold text-spice-red">
-                Spice & Serve
+                Kebab JJ
               </h1>
             </div>
             <p className="text-elegant-anthracite/70 font-roboto text-lg">
-              Sistema di Gestione Coupon
+              Il portale dei coupon Kebab JJ
             </p>
           </div>
-
-          {/* Welcome Card */}
+          {/* Login Card */}
           <Card className="shadow-2xl border-0 bg-background/95 backdrop-blur-sm">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-montserrat font-semibold text-center text-elegant-anthracite">
-                Benvenuto nella Demo
+                Accedi al portale
               </CardTitle>
               <CardDescription className="text-center text-muted-foreground">
-                Il sistema si avvierà automaticamente o puoi procedere manualmente
+                Inserisci le tue credenziali per accedere
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Auto Access Info */}
-              <div className="text-center p-4 bg-mint-green/10 rounded-lg border border-mint-green/20">
-                <p className="text-sm font-roboto text-elegant-anthracite/80">
-                  ⏱️ <strong>Accesso automatico in corso...</strong>
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Verrai reindirizzato alla dashboard tra pochi secondi
-                </p>
-              </div>
-
-              {/* Manual Access Button */}
-              <Button
-                onClick={handleDirectAccess}
-                className="w-full h-12 bg-spice-red hover:bg-spice-red-dark text-white font-montserrat font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Accedi Subito alla Dashboard
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-
-              {/* Features Preview */}
-              <div className="space-y-3">
-                <h4 className="font-montserrat font-semibold text-elegant-anthracite text-center">
-                  Funzionalità Disponibili:
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-sm font-roboto">
-                  <div className="flex items-center text-muted-foreground">
-                    <div className="w-2 h-2 bg-spice-red rounded-full mr-2"></div>
-                    Crea Coupon
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <div className="w-2 h-2 bg-turmeric-yellow rounded-full mr-2"></div>
-                    Gestisci Promozioni
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <div className="w-2 h-2 bg-mint-green rounded-full mr-2"></div>
-                    Statistiche
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <div className="w-2 h-2 bg-elegant-anthracite rounded-full mr-2"></div>
-                    Report Avanzati
-                  </div>
-                </div>
-              </div>
+            <CardContent>
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  className="border p-2 rounded"
+                  disabled={loading}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  className="border p-2 rounded"
+                  disabled={loading}
+                />
+                <Button type="submit" disabled={loading} className="bg-primary text-white p-2 rounded">
+                  {loading ? 'Accesso...' : 'Accedi'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>

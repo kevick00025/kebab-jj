@@ -1,4 +1,4 @@
-// Mock data per il sistema di gestione coupon
+// Mock data per Kebab JJ
 
 export interface Coupon {
   id: string;

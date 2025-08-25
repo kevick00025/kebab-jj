@@ -1,23 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { type Coupon } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { CouponForm } from './CouponForm';
 import { Eye, Edit, Download, Copy, Trash2, RefreshCcw, Calendar, Users, Percent } from 'lucide-react';
 
-interface CouponListProps {
-  coupons: Coupon[];
-  onUpdate: (coupon: Coupon) => void;
-  onDelete: (id: string) => void;
-}
+export const CouponList = () => {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [selectedCoupon, setSelectedCoupon] = useState<any | null>(null);
+  const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export const CouponList = ({ coupons, onUpdate, onDelete }: CouponListProps) => {
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const fetchCoupons = async () => {
+    setLoading(true);
+    // @ts-ignore
+    const { data, error } = await supabase.from('coupons').select('*');
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } else {
+      setCoupons(data || []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -27,29 +39,45 @@ export const CouponList = ({ coupons, onUpdate, onDelete }: CouponListProps) => 
     });
   };
 
-  const duplicateCoupon = (coupon: Coupon) => {
-    const newCoupon: Coupon = {
-      ...coupon,
-      id: (Math.random() * 1000).toString(),
-      title: `${coupon.title} (Copia)`,
-      code: `${coupon.code}COPY`,
-      usageCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      status: 'active'
-    };
-    onUpdate(newCoupon);
-    toast({
-      title: "Coupon duplicato!",
-      description: `Il coupon "${newCoupon.title}" è stato creato.`,
-    });
+  const handleEditClose = async () => {
+    setEditingCoupon(null);
+    await fetchCoupons();
   };
 
-  const downloadCoupon = (coupon: Coupon) => {
-    // Simula il download di un PDF
-    toast({
-      title: "Download avviato!",
-      description: `Il coupon "${coupon.title}" sarà scaricato a breve.`,
+  const downloadCoupon = (coupon: any) => {
+    const blob = new Blob([JSON.stringify(coupon, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `coupon-${coupon.id}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const duplicateCoupon = async (coupon: any) => {
+    // @ts-ignore
+    const { error } = await supabase.from('coupons').insert({
+      ...coupon,
+      id: undefined,
+      title: `${coupon.title} (Copia)`
     });
+    if (error) {
+      toast({ title: "Errore duplicazione", description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: "Duplicato", description: "Il coupon è stato duplicato." });
+      await fetchCoupons();
+    }
+  };
+
+  const onDelete = async (id: string) => {
+    // @ts-ignore
+    const { error } = await supabase.from('coupons').delete().eq('id', id);
+    if (error) {
+      toast({ title: "Errore eliminazione", description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: "Eliminato", description: "Il coupon è stato eliminato." });
+      await fetchCoupons();
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -70,11 +98,15 @@ export const CouponList = ({ coupons, onUpdate, onDelete }: CouponListProps) => 
     }
   };
 
+  if (loading) {
+    return <div>Caricamento coupon...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
         <h2 className="text-xl md:text-2xl font-montserrat font-bold text-elegant-anthracite">
-          Gestione Coupon ({coupons.length})
+          Coupon Kebab JJ ({coupons.length})
         </h2>
       </div>
 
@@ -206,10 +238,7 @@ export const CouponList = ({ coupons, onUpdate, onDelete }: CouponListProps) => 
                     {editingCoupon && (
                       <CouponForm
                         initialData={editingCoupon}
-                        onSave={(updatedData) => {
-                          onUpdate({ ...editingCoupon, ...updatedData });
-                          setEditingCoupon(null);
-                        }}
+                        onClose={handleEditClose}
                       />
                     )}
                   </DialogContent>

@@ -14,20 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
-    }
+      coupons: {
+        Row: {
+          id: string;
+          title: string;
+          code: string;
+          description: string;
+          discount_type: string;
+          discount_value: number;
+          expires_at?: string;
+          status?: string;
+          max_usage?: number;
+          conditions?: string;
+        };
+        Insert: Partial<{
+          id: string;
+          title: string;
+          code: string;
+          description: string;
+          discount_type: string;
+          discount_value: number;
+          expires_at?: string;
+          status?: string;
+          max_usage?: number;
+          conditions?: string;
+        }>;
+        Update: Partial<{
+          id: string;
+          title: string;
+          code: string;
+          description: string;
+          discount_type: string;
+          discount_value: number;
+          expires_at?: string;
+          status?: string;
+          max_usage?: number;
+          conditions?: string;
+        }>;
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
   }
 }
 
