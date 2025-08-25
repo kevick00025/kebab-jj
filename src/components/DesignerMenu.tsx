@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { FaEllipsisV, FaUndo, FaRedo, FaSave, FaDownload, FaRegClone } from "react-icons/fa";
+import { FaEllipsisV } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
+import { saveCanvasImage } from "@/lib/canvasImage";
 
-const DesignerMenu: React.FC<{
-  onUndo?: () => void;
-  onRedo?: () => void;
-  onSave?: () => void;
-  onDownload?: () => void;
-  onTemplate?: () => void;
-}> = ({ onUndo, onRedo, onSave, onDownload, onTemplate }) => {
+const DesignerMenu: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const params = useParams();
   return (
     <div style={{ position: "absolute", top: 24, right: 32, zIndex: 50 }}>
       <button
@@ -20,11 +18,26 @@ const DesignerMenu: React.FC<{
       </button>
       {open && (
         <div className="mt-2 bg-white rounded-xl shadow-xl border border-spice-red/30 p-4 flex flex-col gap-3 min-w-[180px] animate-fade-in" style={{ position: "absolute", right: 0 }}>
-          <button className="flex items-center gap-2 text-spice-red hover:bg-spice-red/10 px-3 py-2 rounded font-bold" onClick={onUndo}><FaUndo /> Annulla</button>
-          <button className="flex items-center gap-2 text-spice-red hover:bg-spice-red/10 px-3 py-2 rounded font-bold" onClick={onRedo}><FaRedo /> Ripristina</button>
-          <button className="flex items-center gap-2 text-mint-green hover:bg-mint-green/10 px-3 py-2 rounded font-bold" onClick={onSave}><FaSave /> Salva</button>
-          <button className="flex items-center gap-2 text-spice-red hover:bg-spice-red/10 px-3 py-2 rounded font-bold" onClick={onDownload}><FaDownload /> Scarica</button>
-          <button className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded font-bold" onClick={onTemplate}><FaRegClone /> Template</button>
+          <button
+            className="flex items-center justify-center gap-2 bg-spice-red text-white hover:bg-spice-red/90 px-4 py-2 rounded font-bold text-lg transition"
+            onClick={async () => {
+              // Trova il canvas centrale tramite id
+              const canvasDiv = document.getElementById('coupon-canvas-preview');
+              if (canvasDiv) {
+                const html2canvas = (await import('html2canvas')).default;
+                const canvas = await html2canvas(canvasDiv as HTMLElement, {backgroundColor: null, useCORS: true, scale: 2});
+                const dataUrl = canvas.toDataURL('image/png');
+                saveCanvasImage(dataUrl);
+              }
+              if (params.id) {
+                navigate(`/coupon/${params.id}`);
+              } else {
+                navigate('/dashboard');
+              }
+            }}
+          >
+            Avanti
+          </button>
         </div>
       )}
     </div>

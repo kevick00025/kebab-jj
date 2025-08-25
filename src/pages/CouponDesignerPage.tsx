@@ -1,4 +1,9 @@
+
+
+
+// ...resto del codice e dichiarazione del componente CouponDesignerPage...
 import React, { useState, useRef, useEffect } from "react";
+import ElementOptionsPanel from "../components/ElementOptionsPanel";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import QRCodeWithLogo from "../components/QRCodeWithLogo";
@@ -14,14 +19,14 @@ type CanvasElement =
   | { id: string; type: 'shape'; shape: 'rect' | 'circle' | 'line'; x: number; y: number; width: number; height: number; color: string; strokeWidth?: number }
   | { id: string; type: 'icon'; icon: string; x: number; y: number; width: number; height: number; color: string };
 import { FaStar, FaHeart, FaGift, FaCheck, FaSmile } from "react-icons/fa";
-  // Icone disponibili
-  const iconOptions = [
-    { name: "Stella", value: "FaStar", icon: <FaStar /> },
-    { name: "Cuore", value: "FaHeart", icon: <FaHeart /> },
-    { name: "Regalo", value: "FaGift", icon: <FaGift /> },
-    { name: "Check", value: "FaCheck", icon: <FaCheck /> },
-    { name: "Smile", value: "FaSmile", icon: <FaSmile /> },
-  ];
+// Icone disponibili
+const iconOptions = [
+  { name: "Stella", value: "FaStar", icon: <FaStar /> },
+  { name: "Cuore", value: "FaHeart", icon: <FaHeart /> },
+  { name: "Regalo", value: "FaGift", icon: <FaGift /> },
+  { name: "Check", value: "FaCheck", icon: <FaCheck /> },
+  { name: "Smile", value: "FaSmile", icon: <FaSmile /> },
+];
 type CouponData = {
   id: string;
   title: string;
@@ -121,6 +126,41 @@ const CouponDesignerPage: React.FC = () => {
   const elementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   // Stato per linee guida di allineamento stile PowerPoint
   const [alignGuides, setAlignGuides] = useState<Array<{ x1: number, y1: number, x2: number, y2: number }>>([]);
+  // Ref per input di editing testo
+  const textInputRef = useRef<HTMLInputElement>(null);
+  // Stato globale per gestire l'editing del testo personalizzato
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+  // Toolbar popup posizione
+  const [toolbarPos, setToolbarPos] = useState<{ left: number; top: number } | null>(null);
+  // Stato per la sezione Forme espandibile
+  const [isShapesOpen, setIsShapesOpen] = useState(false);
+  useEffect(() => {
+    if (selected) {
+      const el = elements.find(e => e.id === selected);
+      if (el && el.type === 'customText' && !editingTextId && elementRefs.current[el.id]) {
+        const rect = (elementRefs.current[el.id] as HTMLDivElement).getBoundingClientRect();
+        setToolbarPos({
+          left: rect.left + rect.width / 2,
+          top: rect.top - 12,
+        });
+      } else {
+        setToolbarPos(null);
+      }
+    } else {
+      setToolbarPos(null);
+    }
+  }, [selected, editingTextId, elements]);
+
+  useEffect(() => {
+    if (editingTextId) {
+      const el = elements.find(e => e.id === editingTextId);
+      if (el && el.type === 'customText' && textInputRef.current) {
+        textInputRef.current.focus();
+        textInputRef.current.select();
+      }
+    }
+  }, [editingTextId, elements]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,20 +196,36 @@ const CouponDesignerPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [id]);
 
+  // Deseleziona se l'elemento selezionato non esiste più
+  useEffect(() => {
+    if (selected && !elements.find(e => e.id === selected)) {
+      setSelected(null);
+    }
+  }, [elements, selected]);
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen text-xl text-spice-red font-bold">Caricamento coupon...</div>;
   }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 overflow-hidden">
-      {/* Sidebar sinistra fissa */}
-      <aside className="w-80 min-w-[260px] max-w-[320px] bg-white/90 border-r border-spice-red/30 p-6 flex flex-col gap-8 shadow-xl h-screen overflow-y-auto fixed left-0 top-0 z-10">
-        {/* Aggiungi nuovo elemento */}
-        <div className="mb-6">
-          <h3 className="font-bold text-lg text-spice-red mb-2">Aggiungi elemento</h3>
-          <div className="flex gap-2 flex-wrap">
+      {/* Sidebar sinistra fissa - restyling */}
+      <aside className="w-80 min-w-[260px] max-w-[320px] bg-gradient-to-b from-white/80 to-mint-green/10 border-r border-spice-red/10 p-0 flex flex-col gap-0 shadow-2xl h-screen overflow-y-auto fixed left-0 top-0 z-20">
+        {/* Header fisso con logo e titolo */}
+        <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-md flex items-center gap-3 px-6 py-4 border-b border-mint-green/30 shadow-sm">
+          <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 rounded-full shadow" />
+          <span className="font-extrabold text-2xl text-spice-red tracking-tight drop-shadow-sm">Editor Coupon</span>
+        </div>
+        {/* Separatore animato */}
+        <div className="h-1 w-full bg-gradient-to-r from-mint-green/0 via-mint-green/60 to-mint-green/0 animate-pulse" />
+        {/* Card: Aggiungi nuovo elemento */}
+        <div className="rounded-3xl bg-white/60 backdrop-blur-xl shadow-xl p-4 mt-4 mb-2 border border-mint-green/30 flex flex-col gap-3 transition-all duration-200 hover:scale-[1.015] hover:shadow-2xl">
+          <h3 className="font-extrabold text-xl text-spice-red mb-2 flex items-center gap-2 tracking-tight">
+            <span className="text-2xl animate-bounce">🧩</span> <span className="inline-flex items-center gap-1">Aggiungi elemento <span className='ml-1 text-xs bg-mint-green/20 text-mint-green px-2 py-0.5 rounded-full font-bold animate-pulse'>Nuovo</span></span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
             <button
-              className="px-3 py-2 bg-mint-green text-white rounded shadow hover:bg-mint-green-dark text-sm font-bold"
+              className="flex items-center gap-2 px-3 py-2 bg-mint-green/90 text-white rounded-xl shadow-md hover:bg-mint-green/100 hover:-translate-y-1 transition-all duration-150 text-base font-bold focus:outline-none focus:ring-2 focus:ring-mint-green/60"
               onClick={() => {
                 const id = `text${Date.now()}`;
                 setElements(els => [...els, {
@@ -185,9 +241,9 @@ const CouponDesignerPage: React.FC = () => {
                   fontFamily: 'Montserrat'
                 }]);
               }}
-            >Testo</button>
+            >✏️ Testo</button>
             <button
-              className="px-3 py-2 bg-spice-red text-white rounded shadow hover:bg-spice-red-dark text-sm font-bold"
+              className="flex items-center gap-2 px-3 py-2 bg-spice-red/90 text-white rounded-xl shadow-md hover:bg-spice-red/100 hover:-translate-y-1 transition-all duration-150 text-base font-bold focus:outline-none focus:ring-2 focus:ring-spice-red/60"
               onClick={() => {
                 const id = `img${Date.now()}`;
                 setElements(els => [...els, {
@@ -200,171 +256,253 @@ const CouponDesignerPage: React.FC = () => {
                   src: ''
                 }]);
               }}
-            >Immagine</button>
-            <button
-              className="px-3 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-700 text-sm font-bold"
-              onClick={() => {
-                const id = `rect${Date.now()}`;
-                setElements(els => [...els, {
-                  id,
-                  type: 'shape',
-                  shape: 'rect',
-                  x: 120,
-                  y: 120,
-                  width: 120,
-                  height: 80,
-                  color: '#2d9cdb',
-                }]);
-              }}
-            >Rettangolo</button>
-            <button
-              className="px-3 py-2 bg-green-500 text-white rounded shadow hover:bg-green-700 text-sm font-bold"
-              onClick={() => {
-                const id = `circle${Date.now()}`;
-                setElements(els => [...els, {
-                  id,
-                  type: 'shape',
-                  shape: 'circle',
-                  x: 180,
-                  y: 180,
-                  width: 80,
-                  height: 80,
-                  color: '#43ea7f',
-                }]);
-              }}
-            >Cerchio</button>
-            <button
-              className="px-3 py-2 bg-gray-700 text-white rounded shadow hover:bg-gray-900 text-sm font-bold"
-              onClick={() => {
-                const id = `line${Date.now()}`;
-                setElements(els => [...els, {
-                  id,
-                  type: 'shape',
-                  shape: 'line',
-                  x: 200,
-                  y: 200,
-                  width: 120,
-                  height: 0,
-                  color: '#222',
-                  strokeWidth: 4,
-                }]);
-              }}
-            >Linea</button>
-            <button
-              className="px-3 py-2 bg-yellow-400 text-white rounded shadow hover:bg-yellow-600 text-sm font-bold"
-              onClick={() => {
-                const id = `icon${Date.now()}`;
-                setElements(els => [...els, {
-                  id,
-                  type: 'icon',
-                  icon: 'FaStar',
-                  x: 220,
-                  y: 220,
-                  width: 48,
-                  height: 48,
-                  color: '#d7263d',
-                }]);
-              }}
-            >Icona</button>
+            >🖼️ Immagine</button>
+            {/* Sezione Forme espandibile - stato gestito a livello di componente */}
+            <div className="col-span-2">
+              <button
+                className={`flex items-center justify-center w-full gap-2 px-3 py-2 bg-blue-500/90 text-white rounded-xl shadow-md hover:bg-blue-600/100 hover:-translate-y-1 transition-all duration-150 text-base font-bold focus:outline-none focus:ring-2 focus:ring-blue-400/60 ${isShapesOpen ? 'ring-2 ring-blue-400/60' : ''}`}
+                type="button"
+                onClick={() => setIsShapesOpen(v => !v)}
+                aria-expanded={isShapesOpen}
+              >
+                <span>➕</span> Forme
+                <svg className={`ml-2 transition-transform duration-200 ${isShapesOpen ? 'rotate-180' : ''}`} width="18" height="18" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+              </button>
+              {isShapesOpen && (
+                <div className="mt-2 w-full bg-white rounded-xl shadow-lg border border-blue-200 flex flex-col overflow-hidden animate-fade-in">
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-blue-700 text-base" onClick={() => {
+                    const id = `rect${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'shape',
+                      shape: 'rect',
+                      x: 120,
+                      y: 120,
+                      width: 120,
+                      height: 80,
+                      color: '#2d9cdb',
+                      // strokeWidth opzionale
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>▭ Rettangolo</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-green-700 text-base" onClick={() => {
+                    const id = `circle${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'shape',
+                      shape: 'circle',
+                      x: 180,
+                      y: 180,
+                      width: 80,
+                      height: 80,
+                      color: '#43ea7f',
+                      // strokeWidth opzionale
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>⚪ Cerchio</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-yellow-50 text-yellow-700 text-base" onClick={() => {
+                    const id = `star${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'icon',
+                      icon: 'FaStar',
+                      x: 220,
+                      y: 220,
+                      width: 48,
+                      height: 48,
+                      color: '#d7263d',
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>⭐ Stella</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50 text-pink-700 text-base" onClick={() => {
+                    const id = `heart${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'icon',
+                      icon: 'FaHeart',
+                      x: 220,
+                      y: 220,
+                      width: 48,
+                      height: 48,
+                      color: '#d7263d',
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>❤️ Cuore</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-purple-50 text-purple-700 text-base" onClick={() => {
+                    const id = `gift${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'icon',
+                      icon: 'FaGift',
+                      x: 220,
+                      y: 220,
+                      width: 48,
+                      height: 48,
+                      color: '#d7263d',
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>🎁 Regalo</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-green-700 text-base" onClick={() => {
+                    const id = `check${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'icon',
+                      icon: 'FaCheck',
+                      x: 220,
+                      y: 220,
+                      width: 48,
+                      height: 48,
+                      color: '#d7263d',
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>✔️ Check</button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-yellow-50 text-yellow-700 text-base" onClick={() => {
+                    const id = `smile${Date.now()}`;
+                    setElements(els => [...els, {
+                      id,
+                      type: 'icon',
+                      icon: 'FaSmile',
+                      x: 220,
+                      y: 220,
+                      width: 48,
+                      height: 48,
+                      color: '#d7263d',
+                    }]);
+                    setIsShapesOpen(false);
+                  }}>😊 Smile</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        {/* Font family */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Font Titolo</label>
-          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red" value={state.fontFamily} onChange={e => setState(s => ({ ...s, fontFamily: e.target.value }))}>
+        {/* Card: Font family e dimensioni foglio */}
+        <div className="rounded-3xl bg-white/60 backdrop-blur-xl shadow-xl p-4 border border-mint-green/20 flex flex-col gap-4 mt-2 transition-all duration-200 hover:scale-[1.01] hover:shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg text-mint-green"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20" stroke="#2dcdb2" strokeWidth="2" strokeLinecap="round"/></svg></span>
+            <span className="font-bold text-base text-spice-red">Font Titolo</span>
+          </div>
+          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.fontFamily} onChange={e => setState(s => ({ ...s, fontFamily: e.target.value }))}>
             <option value="Montserrat">Montserrat</option>
             <option value="Roboto">Roboto</option>
             <option value="Arial">Arial</option>
             <option value="Georgia">Georgia</option>
             <option value="Courier New">Courier New</option>
           </select>
-        </div>
-        <h2 className="font-bold text-xl mb-4 text-spice-red tracking-wide">Personalizza Coupon</h2>
-        {/* Dimensioni foglio */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Dimensioni foglio</label>
-          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red" value={state.canvasSize} onChange={e => setState(s => ({ ...s, canvasSize: e.target.value }))}>
+          <div className="flex items-center gap-2 mt-4 mb-2">
+            <span className="text-lg text-mint-green"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2" stroke="#2dcdb2" strokeWidth="2"/></svg></span>
+            <span className="font-bold text-base text-spice-red">Dimensioni foglio</span>
+          </div>
+          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.canvasSize} onChange={e => setState(s => ({ ...s, canvasSize: e.target.value }))}>
             <option value="A4">A4</option>
             <option value="A5">A5</option>
             <option value="square">Quadrato</option>
           </select>
         </div>
-        {/* Sfondo: colore o gradiente */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Sfondo</label>
-          <div className="flex gap-2 mb-2">
-            <button
-              className={`px-2 py-1 rounded ${state.bgType === "color" ? "bg-spice-red text-white" : "bg-white text-spice-red border border-spice-red"}`}
-              onClick={() => setState(s => ({ ...s, bgType: "color" }))}
-            >Colore</button>
-            <button
-              className={`px-2 py-1 rounded ${state.bgType === "gradient-preset" ? "bg-spice-red text-white" : "bg-white text-spice-red border border-spice-red"}`}
-              onClick={() => setState(s => ({ ...s, bgType: "gradient-preset" }))}
-            >Gradiente</button>
-            <button
-              className={`px-2 py-1 rounded ${state.bgType === "gradient-custom" ? "bg-spice-red text-white" : "bg-white text-spice-red border border-spice-red"}`}
-              onClick={() => setState(s => ({ ...s, bgType: "gradient-custom" }))}
-            >Personalizzato</button>
+        <div className="h-1 w-full bg-gradient-to-r from-spice-red/0 via-spice-red/40 to-spice-red/0 animate-pulse" />
+        {/* Card: Personalizza Coupon */}
+        <div className="rounded-3xl bg-white/60 backdrop-blur-xl shadow-xl p-4 border border-mint-green/20 flex flex-col gap-4 mt-2 transition-all duration-200 hover:scale-[1.01] hover:shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg text-spice-red"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z" fill="#d7263d"/></svg></span>
+            <h2 className="font-extrabold text-lg text-spice-red tracking-wide">Personalizza Coupon</h2>
           </div>
-          {state.bgType === "color" && (
-            <input type="color" className="w-10 h-10 p-0 border-2 border-spice-red rounded-lg shadow" value={state.bgColor} onChange={e => setState(s => ({ ...s, bgColor: e.target.value }))} />
-          )}
-          {state.bgType === "gradient-preset" && (
-            <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red mt-2" value={state.bgGradientPreset} onChange={e => setState(s => ({ ...s, bgGradientPreset: e.target.value }))}>
-              {gradientPresets.map(g => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-            )}
-          {state.bgType === "gradient-custom" && (
-            <div className="flex gap-2 items-center mt-2">
-              <input type="color" value={state.bgGradientCustom.from} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, from: e.target.value } }))} />
-              <span>→</span>
-              <input type="color" value={state.bgGradientCustom.to} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, to: e.target.value } }))} />
-              <input type="number" min={0} max={360} value={state.bgGradientCustom.angle} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, angle: Number(e.target.value) } }))} className="w-16 border rounded p-1 ml-2" />
-              <span>°</span>
+          {/* Sfondo: colore o gradiente */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-mint-green"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="#2dcdb2" fillOpacity=".2" stroke="#2dcdb2" strokeWidth="2"/></svg></span>
+              <label className="block font-semibold text-spice-red">Sfondo</label>
             </div>
-          )}
-        </div>
-        {/* Elementi da mostrare/togliere */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Elementi</label>
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showTitle} onChange={e => setState(s => ({ ...s, showTitle: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">Titolo</span></label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showQR} onChange={e => setState(s => ({ ...s, showQR: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">QR Code</span></label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showCode} onChange={e => setState(s => ({ ...s, showCode: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">Codice coupon</span></label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showDescription} onChange={e => setState(s => ({ ...s, showDescription: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">Descrizione</span></label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showDiscount} onChange={e => setState(s => ({ ...s, showDiscount: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">Sconto</span></label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={state.showExpiry} onChange={e => setState(s => ({ ...s, showExpiry: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded" /> <span className="text-base">Scadenza</span></label>
+            <div className="flex gap-2 mb-2">
+              <button
+                className={`px-2 py-1 rounded-lg transition-all duration-150 font-bold text-sm ${state.bgType === "color" ? "bg-spice-red text-white shadow" : "bg-white text-spice-red border border-spice-red/40"}`}
+                onClick={() => setState(s => ({ ...s, bgType: "color" }))}
+              >Colore</button>
+              <button
+                className={`px-2 py-1 rounded-lg transition-all duration-150 font-bold text-sm ${state.bgType === "gradient-preset" ? "bg-spice-red text-white shadow" : "bg-white text-spice-red border border-spice-red/40"}`}
+                onClick={() => setState(s => ({ ...s, bgType: "gradient-preset" }))}
+              >Gradiente</button>
+              <button
+                className={`px-2 py-1 rounded-lg transition-all duration-150 font-bold text-sm ${state.bgType === "gradient-custom" ? "bg-spice-red text-white shadow" : "bg-white text-spice-red border border-spice-red/40"}`}
+                onClick={() => setState(s => ({ ...s, bgType: "gradient-custom" }))}
+              >Personalizzato</button>
+            </div>
+            {state.bgType === "color" && (
+              <input type="color" className="w-10 h-10 p-0 border-2 border-spice-red/40 rounded-lg shadow focus:ring-2 focus:ring-spice-red/40" value={state.bgColor} onChange={e => setState(s => ({ ...s, bgColor: e.target.value }))} />
+            )}
+            {state.bgType === "gradient-preset" && (
+              <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 mt-2 transition-all" value={state.bgGradientPreset} onChange={e => setState(s => ({ ...s, bgGradientPreset: e.target.value }))}>
+                {gradientPresets.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+              )}
+            {state.bgType === "gradient-custom" && (
+              <div className="flex gap-2 items-center mt-2">
+                <input type="color" value={state.bgGradientCustom.from} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, from: e.target.value } }))} />
+                <span>→</span>
+                <input type="color" value={state.bgGradientCustom.to} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, to: e.target.value } }))} />
+                <input type="number" min={0} max={360} value={state.bgGradientCustom.angle} onChange={e => setState(s => ({ ...s, bgGradientCustom: { ...s.bgGradientCustom, angle: Number(e.target.value) } }))} className="w-16 border rounded p-1 ml-2" />
+                <span>°</span>
+              </div>
+            )}
+          </div>
+          {/* Elementi da mostrare/togliere */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-mint-green"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2dcdb2" fillOpacity=".2" stroke="#2dcdb2" strokeWidth="2"/></svg></span>
+              <label className="block font-semibold text-spice-red">Elementi</label>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showTitle} onChange={e => setState(s => ({ ...s, showTitle: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">Titolo</span></label>
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showQR} onChange={e => setState(s => ({ ...s, showQR: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">QR Code</span></label>
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showCode} onChange={e => setState(s => ({ ...s, showCode: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">Codice coupon</span></label>
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showDescription} onChange={e => setState(s => ({ ...s, showDescription: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">Descrizione</span></label>
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showDiscount} onChange={e => setState(s => ({ ...s, showDiscount: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">Sconto</span></label>
+              <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={state.showExpiry} onChange={e => setState(s => ({ ...s, showExpiry: e.target.checked }))} className="accent-spice-red w-4 h-4 rounded transition-all" /> <span className="text-base">Scadenza</span></label>
+            </div>
+          </div>
+          {/* Stile QR Code */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-mint-green"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="#d7263d" fillOpacity=".2" stroke="#d7263d" strokeWidth="2"/></svg></span>
+              <label className="block font-semibold text-spice-red">Colore QR Code</label>
+            </div>
+            <input type="color" className="w-10 h-10 p-0 border-2 border-spice-red/40 rounded-lg shadow focus:ring-2 focus:ring-spice-red/40" value={state.qrColor} onChange={e => setState(s => ({ ...s, qrColor: e.target.value }))} />
           </div>
         </div>
-        {/* Stile QR Code */}
-        <div className="mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Colore QR Code</label>
-          <input type="color" className="w-10 h-10 p-0 border-2 border-spice-red rounded-lg shadow" value={state.qrColor} onChange={e => setState(s => ({ ...s, qrColor: e.target.value }))} />
+        <div className="h-1 w-full bg-gradient-to-r from-mint-green/0 via-mint-green/40 to-mint-green/0 animate-pulse" />
+        {/* Card: Testo live */}
+        <div className="rounded-3xl bg-white/60 backdrop-blur-xl shadow-xl p-4 border border-mint-green/20 flex flex-col gap-3 mb-2 mt-2 transition-all duration-200 hover:scale-[1.01] hover:shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg text-spice-red"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2M7 9V7a5 5 0 1110 0v2m-1 4v2a3 3 0 11-6 0v-2" stroke="#d7263d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+            <span className="font-bold text-base text-spice-red">Testo live</span>
+          </div>
+          <label className="block font-semibold mb-1 text-spice-red">Titolo</label>
+          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.title} onChange={e => setState(s => ({ ...s, title: e.target.value }))} />
+          <label className="block font-semibold mb-1 text-spice-red">Codice coupon</label>
+          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.code} onChange={e => setState(s => ({ ...s, code: e.target.value }))} />
+          <label className="block font-semibold mb-1 text-spice-red">Descrizione</label>
+          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.description} onChange={e => setState(s => ({ ...s, description: e.target.value }))} />
         </div>
-        {/* Testo live */}
-        <div className="flex flex-col gap-4 mb-4">
-          <label className="block font-semibold mb-2 text-spice-red">Titolo</label>
-          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red" value={state.title} onChange={e => setState(s => ({ ...s, title: e.target.value }))} />
-          <label className="block font-semibold mb-2 text-spice-red">Codice coupon</label>
-          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red" value={state.code} onChange={e => setState(s => ({ ...s, code: e.target.value }))} />
-          <label className="block font-semibold mb-2 text-spice-red">Descrizione</label>
-          <input type="text" className="border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red" value={state.description} onChange={e => setState(s => ({ ...s, description: e.target.value }))} />
+        {/* Footer */}
+        <div className="mt-auto py-3 px-6 text-xs text-gray-500 flex items-center justify-between opacity-80">
+          <span>© {new Date().getFullYear()} Kebab JJ</span>
+          <a href="#" className="underline hover:text-spice-red transition-all">Guida</a>
         </div>
       </aside>
       {/* Canvas centrale sempre centrato */}
-      <main className="flex-1 min-h-screen" style={{ marginLeft: '320px', position: 'relative' }}>
+      <main
+        className="flex-1 min-h-screen"
+        style={{ marginLeft: '320px', position: 'relative' }}
+        onClick={e => {
+          // Deseleziona se clicchi su una zona vuota del canvas
+          if (e.target === e.currentTarget) setSelected(null);
+        }}
+      >
         {/* Menu circolare in alto a destra */}
-        <DesignerMenu
-          onUndo={() => {/* TODO: implementa undo */}}
-          onRedo={() => {/* TODO: implementa redo */}}
-          onSave={() => {/* TODO: implementa save */}}
-          onDownload={() => {/* TODO: implementa download */}}
-          onTemplate={() => {/* TODO: implementa template */}}
-        />
+  <DesignerMenu />
         {/* Preview fissa e perfettamente centrata */}
         <div
+          id="coupon-canvas-preview"
           style={{
             position: 'fixed',
             left: 'calc(50% + 160px)',
@@ -384,12 +522,14 @@ const CouponDesignerPage: React.FC = () => {
             overflow: 'hidden',
             zIndex: 1,
           }}
+          onClick={e => {
+            // Deseleziona se clicchi su una zona vuota del foglio (canvas)
+            if (e.target === e.currentTarget) setSelected(null);
+          }}
         >
           {/* Linee guida principali (SVG) - visibili solo se snap attivo */}
           <svg width={size.w} height={size.h} style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 10 }}>
-            {alignGuides.map((line, idx) => (
-              <line key={idx} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} stroke="#2d9cdb" strokeWidth={3} opacity={0.7} />
-            ))}
+            {/* Linee guida blu rimosse */}
             {/* Linea verticale centrale */}
             {guides?.x?.some(x => Math.abs(x - size.w/2) < 1) && (
               <line x1={size.w/2} y1={0} x2={size.w/2} y2={size.h} stroke="#d7263d" strokeWidth={4} strokeDasharray="8 4" opacity={0.8} />
@@ -417,7 +557,36 @@ const CouponDesignerPage: React.FC = () => {
             const isEditing = selected === el.id && el.type === 'customText';
             // Render forme base
             if (el.type === 'shape') {
-              // ...existing code...
+              // Renderizza rettangolo o cerchio SVG
+              return (
+                <div
+                  key={el.id}
+                  ref={ref => { elementRefs.current[el.id] = ref; }}
+                  style={{
+                    position: 'absolute',
+                    left: el.x,
+                    top: el.y,
+                    width: el.width,
+                    height: el.height,
+                    cursor: 'move',
+                    zIndex: selected === el.id ? 2 : 1,
+                    userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onClick={() => setSelected(el.id)}
+                >
+                  <svg width={el.width} height={el.height} style={{ display: 'block' }}>
+                    {el.shape === 'rect' && (
+                      <rect x={0} y={0} width={el.width} height={el.height} rx={12} fill={el.color} />
+                    )}
+                    {el.shape === 'circle' && (
+                      <ellipse cx={el.width/2} cy={el.height/2} rx={el.width/2} ry={el.height/2} fill={el.color} />
+                    )}
+                  </svg>
+                </div>
+              );
             }
             // Render icona
             if (el.type === 'icon') {
@@ -579,7 +748,7 @@ const CouponDesignerPage: React.FC = () => {
             }
             // Elemento testo personalizzato
             if (el.type === 'customText') {
-              if (isEditing) {
+              if (editingTextId === el.id) {
                 return (
                   <div
                     key={el.id}
@@ -599,9 +768,9 @@ const CouponDesignerPage: React.FC = () => {
                     }}
                   >
                     <input
+                      ref={textInputRef}
                       type="text"
                       value={el.content}
-                      autoFocus
                       style={{
                         fontFamily: el.fontFamily,
                         fontSize: el.fontSize,
@@ -615,8 +784,8 @@ const CouponDesignerPage: React.FC = () => {
                         border: '1px solid #d7263d',
                       }}
                       onChange={e => setElements(els => els.map(elem => elem.id === el.id ? { ...elem, content: e.target.value } : elem))}
-                      onBlur={() => setSelected(null)}
-                      onKeyDown={e => { if (e.key === 'Enter') setSelected(null); }}
+                      onBlur={() => setEditingTextId(null)}
+                      onKeyDown={e => { if (e.key === 'Enter') setEditingTextId(null); }}
                     />
                   </div>
                 );
@@ -638,7 +807,6 @@ const CouponDesignerPage: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
-                    onDoubleClick={() => setSelected(el.id)}
                     onClick={() => setSelected(el.id)}
                   >
                     <div
@@ -653,6 +821,11 @@ const CouponDesignerPage: React.FC = () => {
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                         padding: 4,
                         cursor: 'pointer',
+                      }}
+                      onDoubleClick={e => {
+                        e.stopPropagation();
+                        if (selected === el.id) setEditingTextId(el.id);
+                        else setSelected(el.id);
                       }}
                     >{el.content}</div>
                   </div>
@@ -843,6 +1016,81 @@ const CouponDesignerPage: React.FC = () => {
             {state.showExpiry && <div><strong>Scadenza:</strong> {state.expiry}</div>}
           </div>
         </div>
+      {/* Toolbar popup per personalizzazione testo */}
+      {selected && toolbarPos && (() => {
+        const el = elements.find(e => e.id === selected);
+        if (el && el.type === 'customText' && !editingTextId) {
+          return (
+            <div
+              style={{
+                position: 'fixed',
+                left: toolbarPos.left,
+                top: toolbarPos.top,
+                transform: 'translate(-50%, -100%)',
+                background: '#fff',
+                borderRadius: 8,
+                boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
+                padding: '8px 16px',
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                zIndex: 100,
+                border: '1px solid #d7263d22',
+              }}
+            >
+              {/* Colore testo */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 16 }}>🎨</span>
+                <input
+                  type="color"
+                  value={el.color}
+                  onChange={e => setElements(els => els.map(elem => elem.id === el.id ? { ...elem, color: e.target.value } : elem))}
+                />
+              </label>
+              {/* Grandezza testo */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 16 }}>A</span>
+                <input
+                  type="number"
+                  min={8}
+                  max={64}
+                  value={el.fontSize}
+                  onChange={e => setElements(els => els.map(elem => elem.id === el.id ? { ...elem, fontSize: Number(e.target.value) } : elem))}
+                  style={{ width: 48, borderRadius: 4, border: '1px solid #ccc', padding: 2 }}
+                />
+              </label>
+              {/* Font family */}
+              <select
+                value={el.fontFamily}
+                onChange={e => setElements(els => els.map(elem => elem.id === el.id ? { ...elem, fontFamily: e.target.value } : elem))}
+                style={{ borderRadius: 4, border: '1px solid #ccc', padding: 2 }}
+              >
+                <option value="Montserrat">Montserrat</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
+      {/* Pannello opzioni contestuali per elemento selezionato */}
+      {/* Mostra il pannello opzioni per icone e forme (rettangolo, cerchio) */}
+      <ElementOptionsPanel
+        element={selected ? elements.find(e => e.id === selected && (e.type === 'icon' || e.type === 'shape')) : null}
+        onDelete={() => {
+          setElements(els => {
+            const newEls = els.filter(e => e.id !== selected);
+            if (!newEls.find(e => e.id === selected)) setSelected(null);
+            return newEls;
+          });
+        }}
+        onChange={changes => setElements(els => els.map(e => e.id === selected ? { ...e, ...changes } : e))}
+        iconOptions={iconOptions}
+      />
       </main>
     </div>
   );
