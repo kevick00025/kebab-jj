@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CouponForm } from './CouponForm';
-import { Eye, Edit, Download, Copy, Trash2, RefreshCcw, Calendar, Users, Percent } from 'lucide-react';
+import { Eye, Edit, Download, Copy, Trash2, RefreshCcw, Calendar, Users, Percent, Brush } from 'lucide-react';
 
 export const CouponList = () => {
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -70,13 +70,20 @@ export const CouponList = () => {
   };
 
   const onDelete = async (id: string) => {
-    // @ts-ignore
-    const { error } = await supabase.from('coupons').delete().eq('id', id);
-    if (error) {
-      toast({ title: "Errore eliminazione", description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: "Eliminato", description: "Il coupon è stato eliminato." });
-      await fetchCoupons();
+    console.debug('[CouponList] Tentativo di eliminazione coupon con id:', id);
+    try {
+      const { error, data } = await supabase.from('coupons').delete().eq('id', id);
+      if (error) {
+        console.error('[CouponList] Errore eliminazione coupon:', error);
+        toast({ title: "Errore eliminazione", description: error.message, variant: 'destructive' });
+      } else {
+        console.debug('[CouponList] Coupon eliminato con successo:', data);
+        toast({ title: "Eliminato", description: "Il coupon è stato eliminato." });
+        await fetchCoupons();
+      }
+    } catch (err: any) {
+      console.error('[CouponList] Eccezione eliminazione coupon:', err);
+      toast({ title: "Errore eliminazione", description: err?.message || String(err), variant: 'destructive' });
     }
   };
 
@@ -236,24 +243,33 @@ export const CouponList = () => {
                       <DialogDescription>Aggiorna i dettagli del coupon</DialogDescription>
                     </DialogHeader>
                     {editingCoupon && (
-                      <CouponForm
-                        initialData={editingCoupon}
-                        onClose={handleEditClose}
-                      />
+                      <>
+                        <CouponForm
+                          initialData={editingCoupon}
+                          onClose={handleEditClose}
+                        />
+                        <div className="flex w-full mt-2">
+                          <Button
+                            variant="outline"
+                            className="mx-auto flex items-center gap-2"
+                            onClick={() => {
+                              window.location.href = `/designer/${editingCoupon.id}`;
+                            }}
+                          >
+                            <Brush className="h-4 w-4" />
+                            Modifica stile coupon
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </DialogContent>
                 </Dialog>
 
                 {/* Secondary Actions Row */}
                 <div className="col-span-2 md:col-span-1 flex gap-2 mt-2 md:mt-0">
-                  {/* Download */}
-                  <Button size="sm" variant="outline" onClick={() => downloadCoupon(coupon)} className="flex-1 md:flex-none h-9">
+                  {/* Download/Preview */}
+                  <Button size="sm" variant="outline" onClick={() => window.open(`/coupon/${coupon.id}`, '_blank')} className="flex-1 md:flex-none h-9">
                     <Download className="h-4 w-4" />
-                  </Button>
-
-                  {/* Duplicate */}
-                  <Button size="sm" variant="outline" onClick={() => duplicateCoupon(coupon)} className="flex-1 md:flex-none h-9">
-                    <RefreshCcw className="h-4 w-4" />
                   </Button>
 
                   {/* Delete */}

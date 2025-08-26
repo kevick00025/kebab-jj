@@ -3,11 +3,20 @@
 
 // ...resto del codice e dichiarazione del componente CouponDesignerPage...
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
+function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
 import ElementOptionsPanel from "../components/ElementOptionsPanel";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import QRCodeWithLogo from "../components/QRCodeWithLogo";
 import DesignerMenu from "../components/DesignerMenu";
+import { saveDesignerState } from "@/lib/canvasState";
 import Guides from "../components/Guides";
 import Moveable from "react-moveable";
 import { FaUndo, FaRedo, FaSave, FaDownload, FaRegClone, FaImage } from "react-icons/fa";
@@ -111,6 +120,8 @@ const CouponDesignerPage: React.FC = () => {
     ],
   };
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [elements, setElements] = useState<CanvasElement[]>([
     // Titolo centrato in alto
     { id: "title", type: "title", x: 100, y: 32, width: 300, height: 60 },
@@ -180,7 +191,7 @@ const CouponDesignerPage: React.FC = () => {
         return;
       }
       if (data) {
-        const coupon = data as CouponData;
+        const coupon = data as CouponData & { design_json?: string };
         setState(s => ({
           ...s,
           title: coupon.title || s.title,
@@ -189,12 +200,47 @@ const CouponDesignerPage: React.FC = () => {
           discount: coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`,
           expiry: coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString('it-IT') : s.expiry,
         }));
+        if (coupon.design_json) {
+          try {
+            const parsed = JSON.parse(coupon.design_json);
+            if (parsed.state) setState((s: any) => ({ ...s, ...parsed.state }));
+            if (parsed.elements) setElements(parsed.elements);
+          } catch {}
+        }
       }
       setLoading(false);
     };
     fetchCoupon();
     return () => { cancelled = true; };
   }, [id]);
+
+  // Salvataggio automatico su Supabase (debounced)
+  const saveDesign = React.useCallback(
+    debounce(async (id: string, state: any, elements: any[]) => {
+      setSaveStatus('saving');
+      setSaving(true);
+      const design_json = JSON.stringify({ state, elements });
+      const { error } = await supabase.from('coupons').update({ design_json }).eq('id', id);
+      if (error) {
+        setSaveStatus('error');
+        toast({ title: 'Errore salvataggio design', description: error.message, variant: 'destructive' });
+      } else {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 1200);
+      }
+      setSaving(false);
+    }, 600),
+    []
+  );
+
+  useEffect(() => {
+    if (!id) return;
+    // Salva solo se non in caricamento
+    if (!loading) {
+      setSaveStatus('saving');
+      saveDesign(id, state, elements);
+    }
+  }, [state, elements]);
 
   // Deseleziona se l'elemento selezionato non esiste più
   useEffect(() => {
@@ -499,7 +545,11 @@ const CouponDesignerPage: React.FC = () => {
         }}
       >
         {/* Menu circolare in alto a destra */}
-  <DesignerMenu />
+        <DesignerMenu
+          onBeforeNext={() => {
+            saveDesignerState(state, elements);
+          }}
+        />
         {/* Preview fissa e perfettamente centrata */}
         <div
           id="coupon-canvas-preview"
@@ -517,13 +567,13 @@ const CouponDesignerPage: React.FC = () => {
                   ? gradientPresets.find(g => g.id === state.bgGradientPreset)?.value
                   : `linear-gradient(${state.bgGradientCustom.angle}deg, ${state.bgGradientCustom.from} 0%, ${state.bgGradientCustom.to} 100%)`,
             borderRadius: 24,
-            boxShadow: '0 8px 32px rgba(215,38,61,0.08)',
-            border: '2px solid #d7263d22',
+            boxShadow: 'none', // niente ombra per lo screenshot
+            border: 'none', // niente bordo per lo screenshot
             overflow: 'hidden',
             zIndex: 1,
+            padding: 0,
           }}
           onClick={e => {
-            // Deseleziona se clicchi su una zona vuota del foglio (canvas)
             if (e.target === e.currentTarget) setSelected(null);
           }}
         >
@@ -1092,6 +1142,12 @@ const CouponDesignerPage: React.FC = () => {
         iconOptions={iconOptions}
       />
       </main>
+      {/* Feedback salvataggio automatico */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {saveStatus === 'saving' && <div className="px-4 py-2 bg-yellow-200 text-yellow-900 rounded shadow font-semibold animate-pulse">Salvataggio in corso...</div>}
+        {saveStatus === 'saved' && <div className="px-4 py-2 bg-mint-green text-white rounded shadow font-semibold">Salvato!</div>}
+        {saveStatus === 'error' && <div className="px-4 py-2 bg-destructive text-white rounded shadow font-semibold">Errore salvataggio</div>}
+      </div>
     </div>
   );
 };

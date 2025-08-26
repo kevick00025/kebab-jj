@@ -16,55 +16,92 @@ export type Database = {
     Tables: {
       coupons: {
         Row: {
-          id: string;
-          title: string;
-          code: string;
-          description: string;
-          discount_type: string;
-          discount_value: number;
-          expires_at?: string;
-          status?: string;
-          max_usage?: number;
-          conditions?: string;
-        };
-        Insert: Partial<{
-          id: string;
-          title: string;
-          code: string;
-          description: string;
-          discount_type: string;
-          discount_value: number;
-          expires_at?: string;
-          status?: string;
-          max_usage?: number;
-          conditions?: string;
-        }>;
-        Update: Partial<{
-          id: string;
-          title: string;
-          code: string;
-          description: string;
-          discount_type: string;
-          discount_value: number;
-          expires_at?: string;
-          status?: string;
-          max_usage?: number;
-          conditions?: string;
-        }>;
-      };
-    };
+          code: string
+          conditions: string | null
+          created_at: string | null
+          description: string | null
+          design_json: string | null
+          discount_type: string | null
+          discount_value: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_usage: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          code: string
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          design_json?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_usage?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          code?: string
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          design_json?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_usage?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          archived: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          archived?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+        }
+        Update: {
+          archived?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Enums: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
   }
 }
 

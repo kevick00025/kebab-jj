@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import { saveCanvasImage } from "@/lib/canvasImage";
+// import { saveCanvasImage } from "@/lib/canvasImage";
 
-const DesignerMenu: React.FC = () => {
+type DesignerMenuProps = {
+  onBeforeNext?: () => void;
+};
+const DesignerMenu: React.FC<DesignerMenuProps> = ({ onBeforeNext }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const params = useParams();
@@ -20,15 +23,8 @@ const DesignerMenu: React.FC = () => {
         <div className="mt-2 bg-white rounded-xl shadow-xl border border-spice-red/30 p-4 flex flex-col gap-3 min-w-[180px] animate-fade-in" style={{ position: "absolute", right: 0 }}>
           <button
             className="flex items-center justify-center gap-2 bg-spice-red text-white hover:bg-spice-red/90 px-4 py-2 rounded font-bold text-lg transition"
-            onClick={async () => {
-              // Trova il canvas centrale tramite id
-              const canvasDiv = document.getElementById('coupon-canvas-preview');
-              if (canvasDiv) {
-                const html2canvas = (await import('html2canvas')).default;
-                const canvas = await html2canvas(canvasDiv as HTMLElement, {backgroundColor: null, useCORS: true, scale: 2});
-                const dataUrl = canvas.toDataURL('image/png');
-                saveCanvasImage(dataUrl);
-              }
+            onClick={() => {
+              if (onBeforeNext) onBeforeNext();
               if (params.id) {
                 navigate(`/coupon/${params.id}`);
               } else {
