@@ -98,7 +98,7 @@ const CouponPreview: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center gap-2">
-                <QRCodeCanvas value={coupon.code} size={128} bgColor="#fff" fgColor="#d7263d" />
+                <QRCodeCanvas value={coupon.code} size={128} bgColor="#ffffff" fgColor="#d7263d" />
                 <div className="font-mono text-lg text-spice-red">{coupon.code}</div>
               </div>
               <div className="text-elegant-anthracite text-base font-roboto text-center">

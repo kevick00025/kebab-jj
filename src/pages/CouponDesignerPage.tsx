@@ -55,7 +55,7 @@ const defaultState = {
   description: "Descrizione del coupon",
   canvasSize: "square",
   bgType: "color", // "color" | "gradient-preset" | "gradient-custom"
-  bgColor: "#fff",
+  bgColor: "#ffffff",
   bgGradientPreset: "spice-mint", // id del gradiente predefinito
   bgGradientCustom: { from: "#d7263d", to: "#2d9cdb", angle: 90 },
   fontFamily: "Montserrat",
@@ -78,7 +78,7 @@ const CouponDesignerPage: React.FC = () => {
   const gradientPresets = [
     { id: "spice-mint", name: "Rosso → Mint", value: "linear-gradient(90deg, #d7263d 0%, #2dcdb2 100%)" },
     { id: "blue-violet", name: "Blu → Viola", value: "linear-gradient(90deg, #2d9cdb 0%, #8f5cff 100%)" },
-    { id: "orange-yellow", name: "Arancio → Giallo", value: "linear-gradient(90deg, #ff9800 0%, #fff700 100%)" },
+  { id: "orange-yellow", name: "Arancio → Giallo", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
     { id: "mint-green", name: "Mint → Verde", value: "linear-gradient(90deg, #2dcdb2 0%, #43ea7f 100%)" },
   ];
   const size = state.canvasSize === "square"
@@ -827,7 +827,7 @@ const CouponDesignerPage: React.FC = () => {
                         color: el.color,
                         textAlign: 'center',
                         width: '100%',
-                        background: '#fff',
+                        background: '#ffffff',
                         borderRadius: 6,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                         padding: 4,
@@ -866,7 +866,7 @@ const CouponDesignerPage: React.FC = () => {
                         color: el.color,
                         textAlign: 'center',
                         width: '100%',
-                        background: '#fff',
+                        background: '#ffffff',
                         borderRadius: 6,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                         padding: 4,
@@ -906,7 +906,7 @@ const CouponDesignerPage: React.FC = () => {
                   {el.src ? (
                     <img src={el.src} alt="Immagine" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} />
                   ) : (
-                    <label style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 8, border: '1px dashed #d7263d', color: '#d7263d', cursor: 'pointer', fontSize: 14 }}>
+                    <label style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', borderRadius: 8, border: '1px dashed #d7263d', color: '#d7263d', cursor: 'pointer', fontSize: 14 }}>
                       Carica immagine
                       <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
                         const file = e.target.files?.[0];
@@ -1077,7 +1077,7 @@ const CouponDesignerPage: React.FC = () => {
                 left: toolbarPos.left,
                 top: toolbarPos.top,
                 transform: 'translate(-50%, -100%)',
-                background: '#fff',
+                background: '#ffffff',
                 borderRadius: 8,
                 boxShadow: '0 2px 12px rgba(0,0,0,0.10)',
                 padding: '8px 16px',

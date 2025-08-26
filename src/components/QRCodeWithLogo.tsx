@@ -25,7 +25,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = ({ data, color = "#d7263d"
         type: "rounded",
       },
       backgroundOptions: {
-        color: "#fff",
+  color: "#ffffff",
       },
       imageOptions: {
         crossOrigin: "anonymous",

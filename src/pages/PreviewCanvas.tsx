@@ -7,7 +7,7 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
   const gradientPresets = [
     { id: "spice-mint", value: "linear-gradient(90deg, #d7263d 0%, #2dcdb2 100%)" },
     { id: "blue-violet", value: "linear-gradient(90deg, #2d9cdb 0%, #8f5cff 100%)" },
-    { id: "orange-yellow", value: "linear-gradient(90deg, #ff9800 0%, #fff700 100%)" },
+  { id: "orange-yellow", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
     { id: "mint-green", value: "linear-gradient(90deg, #2dcdb2 0%, #43ea7f 100%)" },
   ];
   return (
@@ -200,7 +200,7 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
                   color: el.color,
                   textAlign: 'center',
                   width: '100%',
-                  background: '#fff',
+                  background: '#ffffff',
                   borderRadius: 6,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                   padding: 4,
