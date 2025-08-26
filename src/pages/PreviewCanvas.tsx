@@ -123,7 +123,7 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
                 color={state.qrColor}
                 width={el.width}
                 height={el.height}
-                logo={"/src/assets/logo.png"}
+                logo={"/logo.png"}
               />
             </div>
           );

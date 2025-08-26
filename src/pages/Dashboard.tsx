@@ -9,6 +9,7 @@ import { CouponList } from '@/components/CouponList';
 import { StatsSection } from '@/components/StatsSection';
 import { Header } from '@/components/Header';
 import { Plus, TicketIcon, TrendingUp, Calendar, Users, ChevronRight } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState<'overview' | 'create' | 'manage' | 'stats'>('overview');
@@ -38,8 +39,20 @@ const Dashboard = () => {
     fetchCoupons();
   };
   const deleteCoupon = async (id: string) => {
-    // Qui puoi aggiungere la logica per delete su Supabase
-    fetchCoupons();
+    const { error } = await supabase.from('coupons').delete().eq('id', id);
+    if (error) {
+      toast({
+        title: 'Errore',
+        description: 'Impossibile eliminare il coupon.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Coupon eliminato',
+        description: 'Il coupon è stato eliminato con successo.',
+      });
+      fetchCoupons();
+    }
   };
 
   // Statistiche calcolate dai dati reali
