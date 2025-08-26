@@ -15,6 +15,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = ({ data, color = "#d7263d"
   useEffect(() => {
     if (!ref.current) return;
     ref.current.innerHTML = "";
+    console.log('[QR] QRCodeWithLogo mount', { data, color, width, height, logo });
     const qrCode = new QRCodeStyling({
       width,
       height,
@@ -25,7 +26,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = ({ data, color = "#d7263d"
         type: "rounded",
       },
       backgroundOptions: {
-  color: "#ffffff",
+        color: "#ffffff",
       },
       imageOptions: {
         crossOrigin: "anonymous",

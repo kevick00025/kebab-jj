@@ -705,34 +705,44 @@ const CouponDesignerPage: React.FC = () => {
             }
             // Elemento QR
             if (el.type === 'qr') {
-              return state.showQR ? (
-                <div
-                  key={el.id}
-                  ref={ref => { elementRefs.current[el.id] = ref; }}
-                  style={{
-                    position: 'absolute',
-                    left: el.x,
-                    top: el.y,
-                    width: el.width,
-                    height: el.height,
-                    cursor: 'move',
-                    zIndex: selected === el.id ? 2 : 1,
-                    userSelect: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  onClick={() => setSelected(el.id)}
-                >
-                  <QRCodeWithLogo
-                    data={state.code}
-                    color={state.qrColor}
-                    width={el.width}
-                    height={el.height}
-                    logo={"/src/assets/logo.png"}
-                  />
-                </div>
-              ) : null;
+              if (state.showQR) {
+                console.log('[QR] Render QR element', {
+                  code: state.code,
+                  color: state.qrColor,
+                  width: el.width,
+                  height: el.height,
+                  logo: "/src/assets/logo.png"
+                });
+                return (
+                  <div
+                    key={el.id}
+                    ref={ref => { elementRefs.current[el.id] = ref; }}
+                    style={{
+                      position: 'absolute',
+                      left: el.x,
+                      top: el.y,
+                      width: el.width,
+                      height: el.height,
+                      cursor: 'move',
+                      zIndex: selected === el.id ? 2 : 1,
+                      userSelect: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    onClick={() => setSelected(el.id)}
+                  >
+                    <QRCodeWithLogo
+                      data={state.code}
+                      color={state.qrColor}
+                      width={el.width}
+                      height={el.height}
+                      logo={"/src/assets/logo.png"}
+                    />
+                  </div>
+                );
+              }
+              return null;
             }
             // Elemento codice
             if (el.type === 'code') {
