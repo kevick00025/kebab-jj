@@ -52,7 +52,7 @@ const RedeemCouponPage: React.FC = () => {
   if (!coupon) return null;
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute redirectTo="/login">
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 p-4">
         <Card className="max-w-md w-full shadow-lg border border-spice-red/40 bg-white/95 p-0 rounded-3xl">
           <CardHeader className="flex flex-col items-center pt-8 pb-2">

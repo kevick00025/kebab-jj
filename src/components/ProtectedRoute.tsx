@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  redirectTo?: string;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, redirectTo = "/" }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return null;
   }
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
   return <>{children}</>;
 };
