@@ -547,7 +547,7 @@ const CouponDesignerPage: React.FC = () => {
         {/* Menu circolare in alto a destra */}
         <DesignerMenu
           onBeforeNext={() => {
-            saveDesignerState(state, elements);
+            saveDesignerState({ ...state, id }, elements);
           }}
         />
         {/* Preview fissa e perfettamente centrata */}
