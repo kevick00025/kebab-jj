@@ -706,12 +706,13 @@ const CouponDesignerPage: React.FC = () => {
             // Elemento QR
             if (el.type === 'qr') {
               if (state.showQR) {
+                const logoPath = "/logo.png";
                 console.log('[QR] Render QR element', {
                   code: state.code,
                   color: state.qrColor,
                   width: el.width,
                   height: el.height,
-                  logo: "/src/assets/logo.png"
+                  logo: logoPath
                 });
                 return (
                   <div
@@ -737,7 +738,7 @@ const CouponDesignerPage: React.FC = () => {
                       color={state.qrColor}
                       width={el.width}
                       height={el.height}
-                      logo={"/src/assets/logo.png"}
+                      logo={logoPath}
                     />
                   </div>
                 );
