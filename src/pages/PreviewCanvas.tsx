@@ -103,7 +103,7 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
         }
         if (el.type === 'qr' && state.showQR) {
           // Il QR code ora contiene il link di riscatto
-          const redeemUrl = `${window.location.origin}/riscatta/${state.code}`;
+          const redeemUrl = `${window.location.origin}/riscatta/${state.id}`;
           return (
             <div
               key={el.id}
