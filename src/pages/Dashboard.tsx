@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockCoupons, mockStats, type Coupon } from '@/data/mockData';
+import type { Database } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
 import { CouponForm } from '@/components/CouponForm';
 import { CouponList } from '@/components/CouponList';
 import { StatsSection } from '@/components/StatsSection';
@@ -11,34 +12,45 @@ import { Plus, TicketIcon, TrendingUp, Calendar, Users, ChevronRight } from 'luc
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState<'overview' | 'create' | 'manage' | 'stats'>('overview');
-  const [coupons, setCoupons] = useState<Coupon[]>(mockCoupons);
-  
-  const addCoupon = (newCoupon: Omit<Coupon, 'id' | 'createdAt' | 'usageCount'>) => {
-    const coupon: Coupon = {
-      ...newCoupon,
-      id: (coupons.length + 1).toString(),
-      createdAt: new Date().toISOString().split('T')[0],
-      usageCount: 0
-    };
-    setCoupons([coupon, ...coupons]);
+  const [coupons, setCoupons] = useState<Database['public']['Tables']['coupons']['Row'][]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch coupon da Supabase
+  const fetchCoupons = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('coupons').select('*');
+    if (!error) setCoupons(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  // CRUD locali (solo per UI, da adattare se vuoi update reali)
+  const addCoupon = async (newCoupon: Omit<Database['public']['Tables']['coupons']['Row'], 'id' | 'created_at' | 'usage_count'>) => {
+    // Qui puoi aggiungere la logica per inserire su Supabase
     setActiveSection('manage');
+    fetchCoupons();
+  };
+  const updateCoupon = async (updatedCoupon: Database['public']['Tables']['coupons']['Row']) => {
+    // Qui puoi aggiungere la logica per update su Supabase
+    fetchCoupons();
+  };
+  const deleteCoupon = async (id: string) => {
+    // Qui puoi aggiungere la logica per delete su Supabase
+    fetchCoupons();
   };
 
-  const updateCoupon = (updatedCoupon: Coupon) => {
-    setCoupons(coupons.map(c => c.id === updatedCoupon.id ? updatedCoupon : c));
-  };
-
-  const deleteCoupon = (id: string) => {
-    setCoupons(coupons.filter(c => c.id !== id));
-  };
-
-  const activeCoupons = coupons.filter(c => c.status === 'active');
+  // Statistiche calcolate dai dati reali
+  const activeCoupons = coupons.filter(c => c.status === 'active' || c.is_active);
   const expiredCoupons = coupons.filter(c => c.status === 'expired');
+  const totalRedemptions = coupons.reduce((sum, c) => sum + (c.usage_count || 0), 0);
+  const monthlyGrowth = 15.8; // Da calcolare se hai dati temporali
 
   return (
     <div className="min-h-screen bg-smoke-gray font-roboto">
       <Header />
-      
       <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Mobile-First Navigation */}
         <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2 lg:gap-3 mb-6 md:mb-8">
@@ -79,7 +91,6 @@ const Dashboard = () => {
             <span className="sm:hidden">Stats</span>
           </Button>
         </div>
-
         {/* Content Sections */}
         <div className="animate-fade-in">
           {activeSection === 'overview' && (
@@ -98,7 +109,6 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-
                 <Card className="border-0 shadow-lg bg-gradient-to-br from-turmeric-yellow to-turmeric-yellow-dark text-elegant-anthracite hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
                     <CardTitle className="text-xs md:text-sm font-roboto font-medium opacity-90">
@@ -111,7 +121,6 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-
                 <Card className="border-0 shadow-lg bg-gradient-to-br from-mint-green to-mint-green-light text-white hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
                     <CardTitle className="text-xs md:text-sm font-roboto font-medium opacity-90">
@@ -120,11 +129,10 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="px-3 md:px-6">
                     <div className="text-2xl md:text-3xl font-montserrat font-bold">
-                      {mockStats.totalRedemptions}
+                      {totalRedemptions}
                     </div>
                   </CardContent>
                 </Card>
-
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
                     <CardTitle className="text-xs md:text-sm font-roboto font-medium text-muted-foreground">
@@ -133,12 +141,11 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="px-3 md:px-6">
                     <div className="text-2xl md:text-3xl font-montserrat font-bold text-mint-green">
-                      +{mockStats.monthlyGrowth}%
+                      +{monthlyGrowth}%
                     </div>
                   </CardContent>
                 </Card>
               </div>
-
               {/* Recent Coupons - Mobile Optimized */}
               <Card className="shadow-lg border-0">
                 <CardHeader className="px-4 md:px-6">
@@ -176,19 +183,18 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <Badge 
-                            variant={coupon.status === 'active' ? 'default' : 'secondary'}
+                            variant={coupon.status === 'active' || coupon.is_active ? 'default' : 'secondary'}
                             className="text-xs"
                           >
-                            {coupon.status === 'active' ? 'Attivo' : 'Scaduto'}
+                            {coupon.status === 'active' || coupon.is_active ? 'Attivo' : 'Scaduto'}
                           </Badge>
                           <span className="text-sm font-medium text-spice-red whitespace-nowrap">
-                            {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `€${coupon.discountValue}`}
+                            {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
                   {/* Mobile View All Button */}
                   <Button
                     variant="outline"
@@ -202,11 +208,9 @@ const Dashboard = () => {
               </Card>
             </div>
           )}
-
           {activeSection === 'create' && (
             <CouponForm onSave={addCoupon} />
           )}
-
           {activeSection === 'manage' && (
             <CouponList 
               coupons={coupons} 
@@ -214,11 +218,16 @@ const Dashboard = () => {
               onDelete={deleteCoupon}
             />
           )}
-
           {activeSection === 'stats' && (
             <StatsSection 
               coupons={coupons}
-              stats={mockStats}
+              stats={{
+                totalCoupons: coupons.length,
+                activeCoupons: activeCoupons.length,
+                expiredCoupons: expiredCoupons.length,
+                totalRedemptions,
+                monthlyGrowth
+              }}
             />
           )}
         </div>

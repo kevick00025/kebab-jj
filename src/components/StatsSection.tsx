@@ -1,22 +1,28 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { type Coupon, type DashboardStats } from '@/data/mockData';
 import { TrendingUp, TrendingDown, Calendar, Users, Target, Award } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
 
 interface StatsSectionProps {
-  coupons: Coupon[];
-  stats: DashboardStats;
+  coupons: Database['public']['Tables']['coupons']['Row'][];
+  stats: {
+    totalCoupons: number;
+    activeCoupons: number;
+    expiredCoupons: number;
+    totalRedemptions: number;
+    monthlyGrowth: number;
+  };
 }
 
 export const StatsSection = ({ coupons, stats }: StatsSectionProps) => {
-  const activeCoupons = coupons.filter(c => c.status === 'active');
+  const activeCoupons = coupons.filter(c => c.status === 'active' || c.is_active);
   const expiredCoupons = coupons.filter(c => c.status === 'expired');
-  const totalUsage = coupons.reduce((sum, coupon) => sum + coupon.usageCount, 0);
+  const totalUsage = coupons.reduce((sum, coupon) => sum + (coupon.usage_count || 0), 0);
   const averageUsage = coupons.length > 0 ? Math.round(totalUsage / coupons.length) : 0;
 
   // Top performing coupons
   const topCoupons = [...coupons]
-    .sort((a, b) => b.usageCount - a.usageCount)
+    .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
     .slice(0, 5);
 
   // Monthly data (mock)
@@ -156,7 +162,7 @@ export const StatsSection = ({ coupons, stats }: StatsSectionProps) => {
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-montserrat font-bold text-spice-red">
-                      {coupon.usageCount}
+                      {coupon.usage_count}
                     </div>
                     <div className="text-xs text-muted-foreground">utilizzi</div>
                   </div>

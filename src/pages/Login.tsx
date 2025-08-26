@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import heroImage from '@/assets/hero-grilled-meat.jpg';
 import { ChefHat } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,16 +34,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-smoke-gray font-roboto relative overflow-hidden">
-      {/* Background Hero Image */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(2px)'
-        }}
-      />
+  {/* Background Hero Image rimossa perché il file non esiste più */}
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-smoke-gray/90 to-background/95" />
       {/* Content */}

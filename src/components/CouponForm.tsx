@@ -13,9 +13,10 @@ import { useNavigate } from 'react-router-dom';
 interface CouponFormProps {
   initialData?: any;
   onClose?: () => void;
+  onSave?: (coupon: any) => void;
 }
 
-export const CouponForm = ({ initialData, onClose }: CouponFormProps) => {
+export const CouponForm = ({ initialData, onClose, onSave }: CouponFormProps) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -57,8 +58,8 @@ export const CouponForm = ({ initialData, onClose }: CouponFormProps) => {
     };
   if (formData.maxUsage) couponData.max_usage = formData.maxUsage;
   if (expiryEnabled && formData.expiryDate) couponData.expires_at = formData.expiryDate;
-    let result;
-    if (initialData?.id) {
+  let result;
+  if (initialData?.id) {
       // @ts-ignore
       result = await supabase.from('coupons').update(couponData).eq('id', initialData.id);
     } else {
@@ -92,7 +93,8 @@ export const CouponForm = ({ initialData, onClose }: CouponFormProps) => {
           conditions: ''
         });
       }
-      if (onClose) onClose();
+    if (onSave) onSave(couponData);
+    if (onClose) onClose();
     }
   };
 

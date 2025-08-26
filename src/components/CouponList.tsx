@@ -9,27 +9,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { CouponForm } from './CouponForm';
 import { Eye, Edit, Download, Copy, Trash2, RefreshCcw, Calendar, Users, Percent, Brush } from 'lucide-react';
 
-export const CouponList = () => {
-  const [coupons, setCoupons] = useState<any[]>([]);
+interface CouponListProps {
+  coupons?: any[];
+  onUpdate?: (coupon: any) => void;
+  onDelete?: (id: string) => void;
+}
+
+export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponListProps) => {
+  const [coupons, setCoupons] = useState<any[]>(propCoupons || []);
   const [selectedCoupon, setSelectedCoupon] = useState<any | null>(null);
   const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchCoupons = async () => {
-    setLoading(true);
-    // @ts-ignore
-    const { data, error } = await supabase.from('coupons').select('*');
-    if (error) {
-      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-    } else {
-      setCoupons(data || []);
-    }
-    setLoading(false);
-  };
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchCoupons();
-  }, []);
+    if (propCoupons) setCoupons(propCoupons);
+  }, [propCoupons]);
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -41,7 +35,7 @@ export const CouponList = () => {
 
   const handleEditClose = async () => {
     setEditingCoupon(null);
-    await fetchCoupons();
+    // Se serve aggiornare i dati, ora lo fa il parent tramite onUpdate
   };
 
   const downloadCoupon = (coupon: any) => {
@@ -54,38 +48,10 @@ export const CouponList = () => {
     URL.revokeObjectURL(url);
   };
 
-  const duplicateCoupon = async (coupon: any) => {
-    // @ts-ignore
-    const { error } = await supabase.from('coupons').insert({
-      ...coupon,
-      id: undefined,
-      title: `${coupon.title} (Copia)`
-    });
-    if (error) {
-      toast({ title: "Errore duplicazione", description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: "Duplicato", description: "Il coupon è stato duplicato." });
-      await fetchCoupons();
-    }
-  };
+  // La duplicazione ora va gestita dal parent se serve
 
-  const onDelete = async (id: string) => {
-    console.debug('[CouponList] Tentativo di eliminazione coupon con id:', id);
-    try {
-      const { error, data } = await supabase.from('coupons').delete().eq('id', id);
-      if (error) {
-        console.error('[CouponList] Errore eliminazione coupon:', error);
-        toast({ title: "Errore eliminazione", description: error.message, variant: 'destructive' });
-      } else {
-        console.debug('[CouponList] Coupon eliminato con successo:', data);
-        toast({ title: "Eliminato", description: "Il coupon è stato eliminato." });
-        await fetchCoupons();
-      }
-    } catch (err: any) {
-      console.error('[CouponList] Eccezione eliminazione coupon:', err);
-      toast({ title: "Errore eliminazione", description: err?.message || String(err), variant: 'destructive' });
-    }
-  };
+  // Se onDelete viene passato come prop, usalo, altrimenti fallback a una funzione vuota
+  const handleDelete = onDelete || (() => {});
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,7 +94,7 @@ export const CouponList = () => {
                     {coupon.title}
                   </CardTitle>
                   <CardDescription className="font-roboto mt-1 text-sm">
-                    Creato il {new Date(coupon.createdAt).toLocaleDateString('it-IT')}
+                    Creato il {coupon.created_at ? new Date(coupon.created_at).toLocaleDateString('it-IT') : '-'}
                   </CardDescription>
                 </div>
                 <Badge className={`${getStatusColor(coupon.status)} text-xs whitespace-nowrap ml-2`}>
@@ -158,20 +124,20 @@ export const CouponList = () => {
                 <div className="flex items-center text-turmeric-yellow">
                   <Percent className="h-4 w-4 mr-1" />
                   <span className="font-semibold text-base">
-                    {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `€${coupon.discountValue}`}
+                    {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`}
                   </span>
                 </div>
                 <div className="flex items-center text-muted-foreground text-sm">
                   <Users className="h-4 w-4 mr-1" />
-                  <span>{coupon.usageCount}</span>
-                  {coupon.maxUsage && <span>/{coupon.maxUsage}</span>}
+                  <span>{coupon.usage_count}</span>
+                  {coupon.max_usage && <span>/{coupon.max_usage}</span>}
                 </div>
               </div>
 
               {/* Expiry Date */}
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4 mr-2" />
-                Scade il {new Date(coupon.expiryDate).toLocaleDateString('it-IT')}
+                Scade il {coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString('it-IT') : '-'}
               </div>
 
               {/* Description */}
@@ -203,13 +169,13 @@ export const CouponList = () => {
                           <strong>Codice:</strong> <code className="font-mono bg-smoke-gray px-2 py-1 rounded text-xs">{selectedCoupon.code}</code>
                         </div>
                         <div>
-                          <strong>Sconto:</strong> {selectedCoupon.discountType === 'percentage' ? `${selectedCoupon.discountValue}%` : `€${selectedCoupon.discountValue}`}
+                          <strong>Sconto:</strong> {selectedCoupon.discount_type === 'percentage' ? `${selectedCoupon.discount_value}%` : `€${selectedCoupon.discount_value}`}
                         </div>
                         <div>
-                          <strong>Scadenza:</strong> {new Date(selectedCoupon.expiryDate).toLocaleDateString('it-IT')}
+                          <strong>Scadenza:</strong> {selectedCoupon.expires_at ? new Date(selectedCoupon.expires_at).toLocaleDateString('it-IT') : '-'}
                         </div>
                         <div>
-                          <strong>Utilizzi:</strong> {selectedCoupon.usageCount}{selectedCoupon.maxUsage && ` / ${selectedCoupon.maxUsage}`}
+                          <strong>Utilizzi:</strong> {selectedCoupon.usage_count}{selectedCoupon.max_usage && ` / ${selectedCoupon.max_usage}`}
                         </div>
                         {selectedCoupon.description && (
                           <div>
@@ -288,7 +254,7 @@ export const CouponList = () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annulla</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(coupon.id)} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => handleDelete(coupon.id)} className="bg-destructive hover:bg-destructive/90">
                           Elimina
                         </AlertDialogAction>
                       </AlertDialogFooter>
