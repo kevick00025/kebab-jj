@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "@/hooks/use-toast";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FaCheckCircle } from "react-icons/fa";
 import { useParams } from "react-router-dom";
@@ -107,7 +108,57 @@ const RedeemCouponPage: React.FC = () => {
                   </div>
                 </div>
               )}
-            </form>
+            {/* Pulsante Riscatta */}
+            <div className="w-full flex flex-col items-center mt-4">
+              <Button
+                type="button"
+                className="w-full max-w-xs py-3 text-lg font-bold"
+                disabled={discounted === null}
+                onClick={async () => {
+                  if (!coupon) return;
+                  // Se il coupon ha un limite di utilizzo
+                  if (coupon.max_usage !== null && coupon.max_usage !== undefined) {
+                    if (coupon.usage_count !== null && coupon.usage_count !== undefined) {
+                      if (coupon.usage_count >= coupon.max_usage) {
+                        setError("Limite di utilizzi raggiunto per questo coupon.");
+                        toast({
+                          title: "Limite raggiunto",
+                          description: "Hai già raggiunto il numero massimo di utilizzi per questo coupon.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                    }
+                    // Aggiorna usage_count su Supabase e ottieni il nuovo valore
+                    const { data, error: updateError } = await supabase
+                      .from('coupons')
+                      .update({ usage_count: (coupon.usage_count || 0) + 1 })
+                      .eq('id', coupon.id)
+                      .select()
+                      .single();
+                    if (updateError) {
+                      setError("Errore durante il riscatto. Riprova.");
+                      toast({
+                        title: "Errore",
+                        description: "Errore durante il riscatto. Riprova.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    setCoupon(data);
+                  }
+                  setError(null);
+                  toast({
+                    title: "Coupon riscattato!",
+                    description: "Il coupon è stato riscattato con successo.",
+                    variant: "default"
+                  });
+                }}
+              >
+                Riscatta
+              </Button>
+            </div>
+          </form>
           </CardContent>
         </Card>
       </div>
