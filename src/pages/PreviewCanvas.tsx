@@ -7,27 +7,41 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
   const gradientPresets = [
     { id: "spice-mint", value: "linear-gradient(90deg, #d7263d 0%, #2dcdb2 100%)" },
     { id: "blue-violet", value: "linear-gradient(90deg, #2d9cdb 0%, #8f5cff 100%)" },
-  { id: "orange-yellow", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
+    { id: "orange-yellow", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
     { id: "mint-green", value: "linear-gradient(90deg, #2dcdb2 0%, #43ea7f 100%)" },
   ];
+  // Responsive: su mobile la preview occupa tutto, su desktop resta centrata e fissa
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640;
+  const dynamicSize = state.canvasSize === 'smartphone'
+    ? isMobile
+      ? { w: window.innerWidth, h: window.innerHeight }
+      : { w: 360, h: 740 }
+    : size;
   return (
-    <div
-      style={{
-        width: size.w,
-        height: size.h,
-        background:
-          state.bgType === "color"
-            ? state.bgColor
-            : state.bgType === "gradient-preset"
-              ? gradientPresets.find(g => g.id === state.bgGradientPreset)?.value
-              : `linear-gradient(${state.bgGradientCustom.angle}deg, ${state.bgGradientCustom.from} 0%, ${state.bgGradientCustom.to} 100%)`,
-        borderRadius: 24,
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-      id="preview-canvas-sheet"
-    >
-      {elements.map(el => {
+    <div className="w-full flex justify-center items-center px-0 sm:px-0">
+      <div
+        id="preview-canvas-sheet"
+        className="relative"
+        style={{
+          width: isMobile && state.canvasSize === 'smartphone' ? '100vw' : dynamicSize.w,
+          maxWidth: isMobile && state.canvasSize === 'smartphone' ? '100vw' : dynamicSize.w,
+          aspectRatio: `${dynamicSize.w} / ${dynamicSize.h}`,
+          background:
+            state.bgType === "color"
+              ? state.bgColor
+              : state.bgType === "gradient-preset"
+                ? gradientPresets.find(g => g.id === state.bgGradientPreset)?.value
+                : `linear-gradient(${state.bgGradientCustom.angle}deg, ${state.bgGradientCustom.from} 0%, ${state.bgGradientCustom.to} 100%)`,
+          borderRadius: isMobile && state.canvasSize === 'smartphone' ? 0 : 24,
+          overflow: 'hidden',
+          position: 'relative',
+          boxShadow: isMobile && state.canvasSize === 'smartphone' ? 'none' : '0 4px 32px 0 rgba(45,205,178,0.08)',
+          minHeight: isMobile && state.canvasSize === 'smartphone' ? '100dvh' : dynamicSize.h * 0.6,
+          height: isMobile && state.canvasSize === 'smartphone' ? '100dvh' : undefined,
+          touchAction: 'pan-x pan-y',
+        }}
+      >
+  {elements.map(el => {
         if (el.type === 'shape') {
           return (
             <div
@@ -104,25 +118,30 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
         if (el.type === 'qr' && state.showQR) {
           // Il QR code ora contiene il link di riscatto
           const redeemUrl = `${window.location.origin}/riscatta/${state.id}`;
+          // Ingrandisci il QR code nella preview e centrato
+          const qrSize = Math.max(Math.round((size.w || 360) * 0.4), 140);
+          const centerLeft = ((size.w || 360) - qrSize) / 2;
+          const centerTop = ((size.h || 740) - qrSize) / 2;
           return (
             <div
               key={el.id}
               style={{
                 position: 'absolute',
-                left: el.x,
-                top: el.y,
-                width: el.width,
-                height: el.height,
+                left: centerLeft,
+                top: centerTop,
+                width: qrSize,
+                height: qrSize,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                zIndex: 10
               }}
             >
               <QRCodeWithLogo
                 data={redeemUrl}
                 color={state.qrColor}
-                width={el.width}
-                height={el.height}
+                width={qrSize}
+                height={qrSize}
                 logo={"/logo.png"}
               />
             </div>
@@ -232,10 +251,23 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
         }
         return null;
       })}
-      {/* Sconto e scadenza fissi in basso */}
-      <div style={{ position: 'absolute', left: 32, bottom: 24, width: size.w - 64, display: 'flex', justifyContent: 'space-between', fontSize: 16 }}>
+      {/* Sconto e scadenza fissi in basso, padding ridotto su mobile */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '4vw',
+          right: '4vw',
+          bottom: '3vw',
+          width: 'auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: 'clamp(13px,2.5vw,16px)',
+          gap: 8,
+        }}
+      >
         {state.showDiscount && <div><strong>Sconto:</strong> {state.discount}</div>}
         {state.showExpiry && <div><strong>Scadenza:</strong> {state.expiry}</div>}
+      </div>
       </div>
     </div>
   );

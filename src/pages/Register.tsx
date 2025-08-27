@@ -22,16 +22,17 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Registrazione</h2>
-      <form onSubmit={handleRegister} className="flex flex-col gap-4 w-80">
+    <div className="flex flex-col items-center justify-center min-h-screen px-2 bg-smoke-gray">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-spice-red font-montserrat">Registrazione</h2>
+      <form onSubmit={handleRegister} className="flex flex-col gap-4 w-full max-w-md bg-background/95 shadow-xl rounded-xl p-4 sm:p-6">
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border p-3 rounded text-base sm:text-lg focus:ring-2 focus:ring-spice-red/30 outline-none"
+          autoComplete="username"
         />
         <input
           type="password"
@@ -39,13 +40,14 @@ const Register: React.FC = () => {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border p-3 rounded text-base sm:text-lg focus:ring-2 focus:ring-spice-red/30 outline-none"
+          autoComplete="new-password"
         />
-        <button type="submit" className="bg-primary text-white p-2 rounded">
+        <button type="submit" className="bg-primary text-white p-3 rounded text-base sm:text-lg mt-2">
           Registrati
         </button>
       </form>
-      {message && <div className="mt-4 text-center">{message}</div>}
+      {message && <div className="mt-4 text-center text-base sm:text-lg font-semibold text-mint-green animate-fade-in">{message}</div>}
     </div>
   );
 };

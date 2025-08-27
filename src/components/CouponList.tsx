@@ -158,7 +158,7 @@ export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponL
                       <span className="sm:hidden">Info</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md mx-4 md:mx-auto">
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle className="font-montserrat text-base md:text-lg">{selectedCoupon?.title}</DialogTitle>
                       <DialogDescription>Dettagli completi del coupon</DialogDescription>
@@ -203,7 +203,7 @@ export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponL
                       <span className="sm:hidden">Edit</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Modifica Coupon</DialogTitle>
                       <DialogDescription>Aggiorna i dettagli del coupon</DialogDescription>
@@ -245,7 +245,7 @@ export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponL
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="mx-4 md:mx-auto">
+                    <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Eliminare il coupon?</AlertDialogTitle>
                         <AlertDialogDescription>

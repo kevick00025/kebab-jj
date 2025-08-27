@@ -52,42 +52,42 @@ const RedeemCouponPage: React.FC = () => {
   if (!coupon) return null;
 
   return (
-    <ProtectedRoute redirectTo="/login">
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 p-4">
-        <Card className="max-w-md w-full shadow-lg border border-spice-red/40 bg-white/95 p-0 rounded-3xl">
+  <ProtectedRoute redirectTo="/">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 px-2 py-4">
+        <Card className="w-full max-w-md shadow-lg border border-spice-red/40 bg-white/95 p-0 rounded-3xl mx-auto">
           <CardHeader className="flex flex-col items-center pt-8 pb-2">
-            <FaCheckCircle className="text-green-500 text-4xl mb-2" />
-            <CardTitle className="text-3xl font-montserrat text-spice-red text-center mb-1 font-bold tracking-tight">
+            <FaCheckCircle className="text-green-500 text-3xl sm:text-4xl mb-2" />
+            <CardTitle className="text-2xl sm:text-3xl font-montserrat text-spice-red text-center mb-1 font-bold tracking-tight">
               Coupon valido!
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 px-8 pb-8">
-            <div className="flex flex-col gap-1 text-base text-elegant-anthracite font-roboto">
+          <CardContent className="space-y-2 px-4 sm:px-8 pb-8">
+            <div className="flex flex-col gap-1 text-base sm:text-lg text-elegant-anthracite font-roboto">
               <div className="flex justify-between border-b border-gray-100 pb-1">
                 <span className="font-semibold">Nome coupon:</span>
-                <span>{coupon.title}</span>
+                <span className="truncate max-w-[60%] text-right">{coupon.title}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-1">
                 <span className="font-semibold">Codice:</span>
-                <span className="font-mono tracking-wider">{coupon.code}</span>
+                <span className="font-mono tracking-wider text-right">{coupon.code}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-1">
                 <span className="font-semibold">Descrizione:</span>
-                <span className="text-right">{coupon.description}</span>
+                <span className="text-right truncate max-w-[60%]">{coupon.description}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-1">
                 <span className="font-semibold">Sconto:</span>
-                <span className="text-spice-red font-bold">{coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`}</span>
+                <span className="text-spice-red font-bold text-right">{coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`}</span>
               </div>
               {coupon.expires_at && (
                 <div className="flex justify-between border-b border-gray-100 pb-1">
                   <span className="font-semibold">Scadenza:</span>
-                  <span>{new Date(coupon.expires_at).toLocaleDateString('it-IT')}</span>
+                  <span className="text-right">{new Date(coupon.expires_at).toLocaleDateString('it-IT')}</span>
                 </div>
               )}
             </div>
             <form className="mt-6 flex flex-col items-center gap-3">
-              <label className="font-semibold text-base text-elegant-anthracite w-full text-center">
+              <label className="font-semibold text-base sm:text-lg text-elegant-anthracite w-full text-center">
                 Importo speso dal cliente (€):
               </label>
               <input
@@ -96,14 +96,14 @@ const RedeemCouponPage: React.FC = () => {
                 step="0.01"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                className="border-2 border-spice-red/40 rounded-xl px-4 py-2 w-48 text-2xl text-center font-mono focus:outline-none focus:ring-2 focus:ring-spice-red/60 transition"
+                className="border-2 border-spice-red/40 rounded-xl px-4 py-3 w-full max-w-xs text-xl sm:text-2xl text-center font-mono focus:outline-none focus:ring-2 focus:ring-spice-red/60 transition"
                 placeholder="0.00"
                 autoFocus
               />
               {discounted !== null && (
                 <div className="w-full flex flex-col items-center mt-2">
                   <div className="bg-green-100 border border-green-400 rounded-xl px-4 py-3 text-green-800 text-lg font-bold shadow-sm">
-                    Prezzo scontato: <span className="text-2xl text-green-700 font-extrabold">€ {discounted.toFixed(2)}</span>
+                    Prezzo scontato: <span className="text-xl sm:text-2xl text-green-700 font-extrabold">€ {discounted.toFixed(2)}</span>
                   </div>
                 </div>
               )}

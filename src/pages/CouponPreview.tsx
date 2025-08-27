@@ -69,42 +69,42 @@ const CouponPreview: React.FC = () => {
   if (!designerData && !coupon) return <div>Coupon non trovato.</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 p-6">
+  <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 px-2 py-6">
       {designerData ? (
         <>
-          <div className="max-w-lg w-full flex flex-col items-center">
+          <div className="w-full max-w-lg flex flex-col items-center mx-auto">
             <PreviewCanvas
               state={designerData.state}
               elements={designerData.elements}
               size={{ w: 500, h: 300 }}
             />
           </div>
-          <div className="flex gap-4 mt-8">
-            <Button onClick={handleDownload} className="bg-spice-red text-white font-bold px-6 py-2 rounded shadow-lg hover:bg-spice-red-dark">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-lg mx-auto">
+            <Button onClick={handleDownload} className="bg-spice-red text-white font-bold w-full py-3 rounded shadow-lg hover:bg-spice-red-dark text-base sm:text-lg">
               Scarica Coupon
             </Button>
-            <Button variant="outline" onClick={() => { clearDesignerState(); navigate('/dashboard'); }} className="font-bold px-6 py-2 rounded shadow-lg">
+            <Button variant="outline" onClick={() => { clearDesignerState(); navigate('/dashboard'); }} className="font-bold w-full py-3 rounded shadow-lg text-base sm:text-lg">
               Torna alla Dashboard
             </Button>
           </div>
         </>
       ) : (
         <>
-          <Card id="coupon-sheet" className="max-w-lg w-full shadow-2xl border-2 border-spice-red/60 bg-white/90 p-6 relative">
+          <Card id="coupon-sheet" className="w-full max-w-lg shadow-2xl border-2 border-spice-red/60 bg-white/90 p-4 sm:p-6 relative mx-auto">
             <CardHeader>
-              <CardTitle className="text-3xl font-montserrat text-spice-red text-center mb-2">
+              <CardTitle className="text-2xl sm:text-3xl font-montserrat text-spice-red text-center mb-2">
                 {coupon.title}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center gap-2">
-                <QRCodeCanvas value={coupon.code} size={128} bgColor="#ffffff" fgColor="#d7263d" />
-                <div className="font-mono text-lg text-spice-red">{coupon.code}</div>
+                <QRCodeCanvas value={`${window.location.origin}/coupon/${coupon.id}`} size={112} bgColor="#ffffff" fgColor="#d7263d" />
+                <div className="font-mono text-lg text-spice-red break-all">{coupon.code}</div>
               </div>
-              <div className="text-elegant-anthracite text-base font-roboto text-center">
+              <div className="text-elegant-anthracite text-base sm:text-lg font-roboto text-center">
                 {coupon.description}
               </div>
-              <div className="flex justify-between mt-4 text-sm">
+              <div className="flex flex-col sm:flex-row justify-between mt-4 text-sm sm:text-base gap-2">
                 <div>
                   <strong>Sconto:</strong> {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `€${coupon.discount_value}`}
                 </div>
@@ -116,11 +116,11 @@ const CouponPreview: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          <div className="flex gap-4 mt-8">
-            <Button onClick={handleDownload} className="bg-spice-red text-white font-bold px-6 py-2 rounded shadow-lg hover:bg-spice-red-dark">
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-lg mx-auto">
+            <Button onClick={handleDownload} className="bg-spice-red text-white font-bold w-full py-3 rounded shadow-lg hover:bg-spice-red-dark text-base sm:text-lg">
               Scarica Coupon
             </Button>
-            <Button variant="outline" onClick={() => navigate('/dashboard')} className="font-bold px-6 py-2 rounded shadow-lg">
+            <Button variant="outline" onClick={() => navigate('/dashboard')} className="font-bold w-full py-3 rounded shadow-lg text-base sm:text-lg">
               Torna alla Dashboard
             </Button>
           </div>

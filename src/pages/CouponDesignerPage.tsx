@@ -53,7 +53,7 @@ const defaultState = {
   title: "Titolo Coupon",
   code: "CODICE123",
   description: "Descrizione del coupon",
-  canvasSize: "square",
+  canvasSize: "smartphone",
   bgType: "color", // "color" | "gradient-preset" | "gradient-custom"
   bgColor: "#ffffff",
   bgGradientPreset: "spice-mint", // id del gradiente predefinito
@@ -74,78 +74,71 @@ const CouponDesignerPage: React.FC = () => {
   const params = useParams();
   const id = params.id;
   const [state, setState] = useState<any>(defaultState);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
+  const [elements, setElements] = useState<CanvasElement[]>([
+    { id: "title", type: "title", x: 100, y: 32, width: 300, height: 60 },
+    { id: "qr", type: "qr", x: 190, y: 110, width: 120, height: 120 },
+    { id: "code", type: "code", x: 140, y: 240, width: 220, height: 40 },
+    { id: "desc", type: "desc", x: 60, y: 300, width: 380, height: 40 }
+  ]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [guides, setGuides] = useState<{ x: number[]; y: number[] } | null>(null);
+  const elementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [alignGuides, setAlignGuides] = useState<Array<{ x1: number, y1: number, x2: number, y2: number }>>([]);
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ left: number; top: number } | null>(null);
+  const [isShapesOpen, setIsShapesOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Gradienti predefiniti
   const gradientPresets = [
     { id: "spice-mint", name: "Rosso → Mint", value: "linear-gradient(90deg, #d7263d 0%, #2dcdb2 100%)" },
     { id: "blue-violet", name: "Blu → Viola", value: "linear-gradient(90deg, #2d9cdb 0%, #8f5cff 100%)" },
-  { id: "orange-yellow", name: "Arancio → Giallo", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
+    { id: "orange-yellow", name: "Arancio → Giallo", value: "linear-gradient(90deg, #ff9800 0%, #ffff00 100%)" },
     { id: "mint-green", name: "Mint → Verde", value: "linear-gradient(90deg, #2dcdb2 0%, #43ea7f 100%)" },
   ];
+  // Responsive: su mobile il canvas occupa tutto, su desktop resta centrato e fisso
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640;
   const size = state.canvasSize === "square"
     ? { w: 500, h: 500 }
     : state.canvasSize === "A4"
       ? { w: 600, h: 350 }
       : state.canvasSize === "A5"
         ? { w: 420, h: 297 }
-        : { w: 500, h: 500 };
+        : state.canvasSize === "smartphone"
+          ? isMobile
+            ? { w: window.innerWidth, h: window.innerHeight }
+            : { w: 360, h: 740 }
+          : { w: 500, h: 500 };
 
   // Funzione per calcolare i punti di snap di un elemento
   function getSnapPoints(el: { x: number; y: number; width: number; height: number }) {
     const { x, y, width, height } = el;
     return [
-      // Angoli
-      { x: x, y: y }, // top-left
-      { x: x + width, y: y }, // top-right
-      { x: x, y: y + height }, // bottom-left
-      { x: x + width, y: y + height }, // bottom-right
-      // Metà lati
-      { x: x + width / 2, y: y }, // top-center
-      { x: x + width, y: y + height / 2 }, // right-center
-      { x: x + width / 2, y: y + height }, // bottom-center
-      { x: x, y: y + height / 2 }, // left-center
-      // Centro
-      { x: x + width / 2, y: y + height / 2 }, // center
+      { x: x, y: y },
+      { x: x + width, y: y },
+      { x: x, y: y + height },
+      { x: x + width, y: y + height },
+      { x: x + width / 2, y: y },
+      { x: x + width, y: y + height / 2 },
+      { x: x + width / 2, y: y + height },
+      { x: x, y: y + height / 2 },
+      { x: x + width / 2, y: y + height / 2 },
     ];
   }
 
   // Linee guida principali del foglio
   const mainGuides = {
-    x: [size.w / 2], // verticale centrale
-    y: [size.h / 2], // orizzontale centrale
+    x: [size.w / 2],
+    y: [size.h / 2],
     diagonals: [
-      // Da top-left a bottom-right
       { x1: 0, y1: 0, x2: size.w, y2: size.h },
-      // Da top-right a bottom-left
       { x1: size.w, y1: 0, x2: 0, y2: size.h },
     ],
   };
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
-  const [elements, setElements] = useState<CanvasElement[]>([
-    // Titolo centrato in alto
-    { id: "title", type: "title", x: 100, y: 32, width: 300, height: 60 },
-    // QR centrato sotto il titolo
-    { id: "qr", type: "qr", x: 190, y: 110, width: 120, height: 120 },
-    // Codice centrato sotto il QR
-    { id: "code", type: "code", x: 140, y: 240, width: 220, height: 40 },
-    // Descrizione centrata sotto il codice
-    { id: "desc", type: "desc", x: 60, y: 300, width: 380, height: 40 }
-  ]);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [guides, setGuides] = useState<{ x: number[]; y: number[] } | null>(null);
-  const elementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  // Stato per linee guida di allineamento stile PowerPoint
-  const [alignGuides, setAlignGuides] = useState<Array<{ x1: number, y1: number, x2: number, y2: number }>>([]);
-  // Ref per input di editing testo
-  const textInputRef = useRef<HTMLInputElement>(null);
-  // Stato globale per gestire l'editing del testo personalizzato
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);
-
-  // Toolbar popup posizione
-  const [toolbarPos, setToolbarPos] = useState<{ left: number; top: number } | null>(null);
-  // Stato per la sezione Forme espandibile
-  const [isShapesOpen, setIsShapesOpen] = useState(false);
   useEffect(() => {
     if (selected) {
       const el = elements.find(e => e.id === selected);
@@ -238,7 +231,7 @@ const CouponDesignerPage: React.FC = () => {
     // Salva solo se non in caricamento
     if (!loading) {
       setSaveStatus('saving');
-      saveDesign(id, state, elements);
+      saveDesign(id, { ...state, id }, elements);
     }
   }, [state, elements]);
 
@@ -252,11 +245,35 @@ const CouponDesignerPage: React.FC = () => {
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen text-xl text-spice-red font-bold">Caricamento coupon...</div>;
   }
-
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-spice-red/10 to-mint-green/10 overflow-hidden">
-      {/* Sidebar sinistra fissa - restyling */}
-      <aside className="w-80 min-w-[260px] max-w-[320px] bg-gradient-to-b from-white/80 to-mint-green/10 border-r border-spice-red/10 p-0 flex flex-col gap-0 shadow-2xl h-screen overflow-y-auto fixed left-0 top-0 z-20">
+    <div className="flex min-h-screen h-[100dvh] bg-gradient-to-br from-spice-red/10 to-mint-green/10 overflow-x-auto overflow-y-hidden relative">
+      {/* Sidebar sinistra: drawer su mobile, fissa su desktop */}
+      {/* Pulsante hamburger mobile */}
+      <button
+        className="sm:hidden fixed top-4 left-4 z-40 bg-white/90 rounded-full p-2 shadow-lg border border-mint-green/30"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Apri menu"
+      >
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="2" rx="1" fill="#2dcdb2"/><rect x="4" y="15" width="16" height="2" rx="1" fill="#2dcdb2"/></svg>
+      </button>
+      {/* Overlay mobile */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30" onClick={() => setSidebarOpen(false)} />}
+      <aside
+        className={`transition-all duration-300 bg-gradient-to-b from-white/80 to-mint-green/10 border-r border-spice-red/10 p-0 flex flex-col gap-0 shadow-2xl h-screen overflow-y-auto z-40
+        fixed top-0 left-0
+        w-full max-w-full sm:w-80 sm:min-w-[260px] sm:max-w-[320px] sm:static sm:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0`}
+        style={{ minWidth: '0' }}
+      >
+        {/* Header fisso con logo e titolo */}
+        <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-md flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-mint-green/30 shadow-sm">
+          <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 rounded-full shadow" />
+          <span className="font-extrabold text-xl sm:text-2xl text-spice-red tracking-tight drop-shadow-sm">Editor Coupon</span>
+          {/* Chiudi su mobile */}
+          <button className="ml-auto sm:hidden p-1 rounded-full hover:bg-mint-green/10" onClick={() => setSidebarOpen(false)} aria-label="Chiudi menu">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6" stroke="#d7263d" strokeWidth="2"/></svg>
+          </button>
+        </div>
         {/* Header fisso con logo e titolo */}
         <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-md flex items-center gap-3 px-6 py-4 border-b border-mint-green/30 shadow-sm">
           <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 rounded-full shadow" />
@@ -438,10 +455,30 @@ const CouponDesignerPage: React.FC = () => {
             <span className="text-lg text-mint-green"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2" stroke="#2dcdb2" strokeWidth="2"/></svg></span>
             <span className="font-bold text-base text-spice-red">Dimensioni foglio</span>
           </div>
-          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.canvasSize} onChange={e => setState(s => ({ ...s, canvasSize: e.target.value }))}>
+          <select className="w-full border rounded-lg p-2 shadow focus:ring-2 focus:ring-spice-red/40 transition-all" value={state.canvasSize} onChange={e => {
+            const newSize = e.target.value;
+            let newElements = elements;
+            // Adattamento automatico elementi per smartphone
+            if (newSize === 'smartphone') {
+              // Dimensioni canvas smartphone
+              const targetW = 360, targetH = 740;
+              // Scala proporzionalmente gli elementi rispetto alla dimensione attuale
+              const prev = size;
+              newElements = elements.map(el => ({
+                ...el,
+                x: Math.round(el.x * targetW / prev.w),
+                y: Math.round(el.y * targetH / prev.h),
+                width: Math.round(el.width * targetW / prev.w),
+                height: Math.round(el.height * targetH / prev.h)
+              }));
+            }
+            setState(s => ({ ...s, canvasSize: newSize }));
+            setElements(newElements);
+          }}>
             <option value="A4">A4</option>
             <option value="A5">A5</option>
             <option value="square">Quadrato</option>
+            <option value="smartphone">Smartphone</option>
           </select>
         </div>
         <div className="h-1 w-full bg-gradient-to-r from-spice-red/0 via-spice-red/40 to-spice-red/0 animate-pulse" />
@@ -537,41 +574,46 @@ const CouponDesignerPage: React.FC = () => {
       </aside>
       {/* Canvas centrale sempre centrato */}
       <main
-        className="flex-1 min-h-screen"
-        style={{ marginLeft: '320px', position: 'relative' }}
+        className="flex-1 min-h-screen relative px-0 sm:px-0 pb-24 sm:pb-0"
+        style={{ marginLeft: '0', paddingLeft: '0' }}
         onClick={e => {
           // Deseleziona se clicchi su una zona vuota del canvas
           if (e.target === e.currentTarget) setSelected(null);
         }}
       >
-        {/* Menu circolare in alto a destra */}
-        <DesignerMenu
-          onBeforeNext={() => {
-            saveDesignerState({ ...state, id }, elements);
-          }}
-        />
+        {/* Menu circolare in alto a destra (solo desktop) */}
+        <div className="hidden sm:block">
+          <DesignerMenu
+            onBeforeNext={() => {
+              saveDesignerState({ ...state, id }, elements);
+            }}
+          />
+        </div>
         {/* Preview fissa e perfettamente centrata */}
         <div
           id="coupon-canvas-preview"
+          className={`mx-auto ${isMobile ? 'mt-0 mb-0' : 'mt-12 mb-0'} relative`}
           style={{
-            position: 'fixed',
-            left: 'calc(50% + 160px)',
-            top: '50%',
-            transform: `translate(-50%, -50%)`,
-            width: size.w,
-            height: size.h,
+            position: 'relative',
+            width: isMobile && state.canvasSize === 'smartphone' ? '100vw' : size.w,
+            maxWidth: isMobile && state.canvasSize === 'smartphone' ? '100vw' : size.w,
+            minWidth: 0,
+            height: isMobile && state.canvasSize === 'smartphone' ? '100dvh' : size.h,
+            maxHeight: isMobile && state.canvasSize === 'smartphone' ? '100dvh' : size.h,
+            aspectRatio: `${size.w} / ${size.h}`,
             background:
               state.bgType === "color"
                 ? state.bgColor
                 : state.bgType === "gradient-preset"
                   ? gradientPresets.find(g => g.id === state.bgGradientPreset)?.value
                   : `linear-gradient(${state.bgGradientCustom.angle}deg, ${state.bgGradientCustom.from} 0%, ${state.bgGradientCustom.to} 100%)`,
-            borderRadius: 24,
-            boxShadow: 'none', // niente ombra per lo screenshot
-            border: 'none', // niente bordo per lo screenshot
+            borderRadius: isMobile && state.canvasSize === 'smartphone' ? 0 : 24,
+            boxShadow: isMobile && state.canvasSize === 'smartphone' ? 'none' : '0 4px 32px 0 rgba(45,205,178,0.08)',
+            border: 'none',
             overflow: 'hidden',
             zIndex: 1,
             padding: 0,
+            touchAction: 'pan-x pan-y',
           }}
           onClick={e => {
             if (e.target === e.currentTarget) setSelected(null);
@@ -1140,24 +1182,60 @@ const CouponDesignerPage: React.FC = () => {
 
       {/* Pannello opzioni contestuali per elemento selezionato */}
       {/* Mostra il pannello opzioni per icone e forme (rettangolo, cerchio) */}
-      <ElementOptionsPanel
-        element={selected ? elements.find(e => e.id === selected && (e.type === 'icon' || e.type === 'shape')) : null}
-        onDelete={() => {
-          setElements(els => {
-            const newEls = els.filter(e => e.id !== selected);
-            if (!newEls.find(e => e.id === selected)) setSelected(null);
-            return newEls;
-          });
-        }}
-        onChange={changes => setElements(els => els.map(e => e.id === selected ? { ...e, ...changes } : e))}
-        iconOptions={iconOptions}
-      />
+      {/* Drawer mobile per opzioni elemento selezionato */}
+      {selected && (elements.find(e => e.id === selected && (e.type === 'icon' || e.type === 'shape'))) && (
+        <div className="fixed left-0 right-0 bottom-0 z-50 sm:static sm:rounded-none sm:shadow-none">
+          <div className="sm:hidden block bg-white rounded-t-2xl shadow-2xl border-t border-mint-green/30 p-4 pb-8 animate-slide-up w-full max-w-full">
+            <ElementOptionsPanel
+              element={elements.find(e => e.id === selected && (e.type === 'icon' || e.type === 'shape'))}
+              onDelete={() => {
+                setElements(els => {
+                  const newEls = els.filter(e => e.id !== selected);
+                  if (!newEls.find(e => e.id === selected)) setSelected(null);
+                  return newEls;
+                });
+              }}
+              onChange={changes => setElements(els => els.map(e => e.id === selected ? { ...e, ...changes } : e))}
+              iconOptions={iconOptions}
+              mobile
+            />
+          </div>
+          <div className="hidden sm:block">
+            <ElementOptionsPanel
+              element={elements.find(e => e.id === selected && (e.type === 'icon' || e.type === 'shape'))}
+              onDelete={() => {
+                setElements(els => {
+                  const newEls = els.filter(e => e.id !== selected);
+                  if (!newEls.find(e => e.id === selected)) setSelected(null);
+                  return newEls;
+                });
+              }}
+              onChange={changes => setElements(els => els.map(e => e.id === selected ? { ...e, ...changes } : e))}
+              iconOptions={iconOptions}
+            />
+          </div>
+        </div>
+      )}
       </main>
       {/* Feedback salvataggio automatico */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
         {saveStatus === 'saving' && <div className="px-4 py-2 bg-yellow-200 text-yellow-900 rounded shadow font-semibold animate-pulse">Salvataggio in corso...</div>}
         {saveStatus === 'saved' && <div className="px-4 py-2 bg-mint-green text-white rounded shadow font-semibold">Salvato!</div>}
         {saveStatus === 'error' && <div className="px-4 py-2 bg-destructive text-white rounded shadow font-semibold">Errore salvataggio</div>}
+      </div>
+
+      {/* Pulsante Avanti mobile: cerchio con freccia, fisso in alto a destra, visibile solo su mobile */}
+      <div className="fixed top-5 right-5 z-50 sm:hidden">
+        <button
+          className="w-14 h-14 flex items-center justify-center rounded-full bg-spice-red text-white shadow-xl border border-spice-red/30 hover:bg-spice-red/90 transition focus:outline-none focus:ring-2 focus:ring-spice-red/40"
+          style={{ boxShadow: '0 4px 16px 0 rgba(215,38,61,0.18)' }}
+          aria-label="Avanti"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+        >
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="none"/><path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
       </div>
     </div>
   );

@@ -19,9 +19,10 @@ interface Props {
   onDelete: () => void;
   onChange: (changes: any) => void;
   iconOptions: IconOption[];
+  mobile?: boolean;
 }
 
-const ElementOptionsPanel: React.FC<Props> = ({ element, onDelete, onChange, iconOptions }) => {
+const ElementOptionsPanel: React.FC<Props> = ({ element, onDelete, onChange, iconOptions, mobile }) => {
   if (!element) return null;
 
   return (
