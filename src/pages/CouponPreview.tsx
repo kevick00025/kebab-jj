@@ -8,6 +8,7 @@ import { getDesignerState, clearDesignerState } from "@/lib/canvasState";
 import PreviewCanvas from "./PreviewCanvas";
 import html2canvas from "html2canvas";
 
+
 const CouponPreview: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,6 +16,17 @@ const CouponPreview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [designerData, setDesignerData] = useState<any | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [instaImg, setInstaImg] = useState<string|null>(null);
+  const [showInstaModal, setShowInstaModal] = useState(false);
+
+  const handleInstagramStory = async () => {
+    const node = document.getElementById(designerData ? "preview-canvas-sheet" : "coupon-sheet");
+    if (!node) return;
+    const canvas = await html2canvas(node, { backgroundColor: null, useCORS: true, scale: 2 });
+    const url = canvas.toDataURL("image/png");
+    setInstaImg(url);
+    setShowInstaModal(true);
+  };
 
   useEffect(() => {
     // Se esiste stato designer, usalo per la preview custom
@@ -125,6 +137,39 @@ const CouponPreview: React.FC = () => {
             </Button>
           </div>
         </>
+      )}
+      {/* Modal Instagram Story */}
+      {showInstaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-xl p-6 max-w-[95vw] w-full max-w-md flex flex-col items-center relative">
+            <button className="absolute top-2 right-2 text-xl" onClick={() => setShowInstaModal(false)}>&times;</button>
+            <h2 className="text-lg font-bold mb-2">Condividi su Instagram Story</h2>
+            {instaImg && (
+              <img src={instaImg} alt="Anteprima coupon" className="w-full rounded-lg mb-4 border shadow" />
+            )}
+            <ol className="text-sm mb-3 list-decimal pl-4 text-left">
+              <li>Salva l'immagine sul tuo dispositivo (tieni premuto o clicca destro sull'immagine).</li>
+              <li>Apri Instagram e crea una nuova storia.</li>
+              <li>Seleziona l'immagine appena salvata come sfondo della storia.</li>
+            </ol>
+            <a
+              href={instaImg || '#'}
+              download="coupon-instagram.png"
+              className="inline-block px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 font-semibold mb-2"
+            >
+              Scarica immagine
+            </a>
+            <button
+              className="inline-block px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-800"
+              onClick={() => {
+                setShowInstaModal(false);
+                setInstaImg(null);
+              }}
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

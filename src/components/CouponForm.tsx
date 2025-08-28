@@ -78,7 +78,7 @@ export const CouponForm = ({ initialData, onClose, onSave }: CouponFormProps) =>
         description: `Il coupon \"${formData.title}\" è stato creato con successo.`,
       });
       if (!initialData && result.data && result.data[0]?.id) {
-        navigate(`/designer/${result.data[0].id}`);
+        navigate(`/coupon/${result.data[0].id}`);
       }
       if (!initialData) {
         setFormData({

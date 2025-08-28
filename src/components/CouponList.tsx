@@ -159,34 +159,50 @@ export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponL
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="font-montserrat text-base md:text-lg">{selectedCoupon?.title}</DialogTitle>
-                      <DialogDescription>Dettagli completi del coupon</DialogDescription>
+                    <DialogHeader className="flex flex-col items-center gap-2 pb-2">
+                      <div className="flex items-center gap-2 w-full justify-center">
+                        <Eye className="h-5 w-5 text-primary" />
+                        <DialogTitle className="font-montserrat text-lg md:text-xl text-center w-full">{selectedCoupon?.title}</DialogTitle>
+                      </div>
+                      <DialogDescription className="text-center text-sm text-muted-foreground">Dettagli completi del coupon</DialogDescription>
                     </DialogHeader>
                     {selectedCoupon && (
-                      <div className="space-y-4 font-roboto text-sm">
-                        <div>
-                          <strong>Codice:</strong> <code className="font-mono bg-smoke-gray px-2 py-1 rounded text-xs">{selectedCoupon.code}</code>
+                      <div className="space-y-5 font-roboto text-[15px]">
+                        {/* Codice coupon */}
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="uppercase tracking-widest font-bold text-lg text-primary bg-gray-100 px-4 py-2 rounded-lg shadow-inner border border-gray-200 select-all">
+                            {selectedCoupon.code}
+                          </span>
+                          <span className="text-xs text-muted-foreground">Codice coupon</span>
                         </div>
-                        <div>
-                          <strong>Sconto:</strong> {selectedCoupon.discount_type === 'percentage' ? `${selectedCoupon.discount_value}%` : `€${selectedCoupon.discount_value}`}
+                        <div className="flex flex-wrap justify-between gap-3 border rounded-lg p-3 bg-gray-50">
+                          <div className="flex items-center gap-2">
+                            <Percent className="h-4 w-4 text-turmeric-yellow" />
+                            <span className="font-semibold text-turmeric-yellow text-base">
+                              {selectedCoupon.discount_type === 'percentage' ? `${selectedCoupon.discount_value}%` : `€${selectedCoupon.discount_value}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">Scade il {selectedCoupon.expires_at ? new Date(selectedCoupon.expires_at).toLocaleDateString('it-IT') : '-'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{selectedCoupon.usage_count}{selectedCoupon.max_usage && ` / ${selectedCoupon.max_usage}`}</span>
+                          </div>
                         </div>
-                        <div>
-                          <strong>Scadenza:</strong> {selectedCoupon.expires_at ? new Date(selectedCoupon.expires_at).toLocaleDateString('it-IT') : '-'}
-                        </div>
-                        <div>
-                          <strong>Utilizzi:</strong> {selectedCoupon.usage_count}{selectedCoupon.max_usage && ` / ${selectedCoupon.max_usage}`}
-                        </div>
+                        {/* Descrizione */}
                         {selectedCoupon.description && (
-                          <div>
-                            <strong>Descrizione:</strong>
-                            <p className="mt-1 text-muted-foreground text-xs">{selectedCoupon.description}</p>
+                          <div className="bg-white border-l-4 border-primary p-3 rounded shadow-sm">
+                            <div className="font-semibold mb-1 text-primary">Descrizione</div>
+                            <p className="text-muted-foreground text-sm whitespace-pre-line">{selectedCoupon.description}</p>
                           </div>
                         )}
+                        {/* Condizioni */}
                         {selectedCoupon.conditions && (
-                          <div>
-                            <strong>Condizioni:</strong>
-                            <p className="mt-1 text-muted-foreground text-xs">{selectedCoupon.conditions}</p>
+                          <div className="bg-gray-50 border-l-4 border-turmeric-yellow p-3 rounded shadow-sm">
+                            <div className="font-semibold mb-1 text-turmeric-yellow">Condizioni</div>
+                            <p className="text-muted-foreground text-sm whitespace-pre-line">{selectedCoupon.conditions}</p>
                           </div>
                         )}
                       </div>
@@ -214,18 +230,6 @@ export const CouponList = ({ coupons: propCoupons, onUpdate, onDelete }: CouponL
                           initialData={editingCoupon}
                           onClose={handleEditClose}
                         />
-                        <div className="flex w-full mt-2">
-                          <Button
-                            variant="outline"
-                            className="mx-auto flex items-center gap-2"
-                            onClick={() => {
-                              window.location.href = `/designer/${editingCoupon.id}`;
-                            }}
-                          >
-                            <Brush className="h-4 w-4" />
-                            Modifica stile coupon
-                          </Button>
-                        </div>
                       </>
                     )}
                   </DialogContent>

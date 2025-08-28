@@ -9,7 +9,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import CouponPreview from "./pages/CouponPreview";
 import RedeemCouponPage from "./pages/RedeemCouponPage";
-import CouponDesignerPage from "./pages/CouponDesignerPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,14 +38,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route 
-            path="/designer/:id" 
-            element={
-              <ProtectedRoute>
-                <CouponDesignerPage />
-              </ProtectedRoute>
-            }
-          />
+
           {/* Route pubblica per riscatto coupon tramite QR code */}
           <Route path="/riscatta/:id" element={<RedeemCouponPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

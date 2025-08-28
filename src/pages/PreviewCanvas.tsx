@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import html2canvas from "html2canvas";
 import QRCodeWithLogo from "../components/QRCodeWithLogo";
 import { FaStar, FaHeart, FaGift, FaCheck, FaSmile } from "react-icons/fa";
 
@@ -17,8 +18,20 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
       ? { w: window.innerWidth, h: window.innerHeight }
       : { w: 360, h: 740 }
     : size;
+  const [instaImg, setInstaImg] = useState<string|null>(null);
+  const [showInstaModal, setShowInstaModal] = useState(false);
+
+  const handleInstagramStory = async () => {
+    const node = document.getElementById("preview-canvas-sheet");
+    if (!node) return;
+    const canvas = await html2canvas(node, { backgroundColor: null, useCORS: true, scale: 2 });
+    const url = canvas.toDataURL("image/png");
+    setInstaImg(url);
+    setShowInstaModal(true);
+  };
+
   return (
-    <div className="w-full flex justify-center items-center px-0 sm:px-0">
+    <div className="w-full flex flex-col items-center px-0 sm:px-0 gap-6">
       <div
         id="preview-canvas-sheet"
         className="relative"
@@ -41,6 +54,9 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
           touchAction: 'pan-x pan-y',
         }}
       >
+ </div>
+  );
+
   {elements.map(el => {
         if (el.type === 'shape') {
           return (
@@ -268,7 +284,47 @@ export default function PreviewCanvas({ state, elements, size }: { state: any, e
         {state.showDiscount && <div><strong>Sconto:</strong> {state.discount}</div>}
         {state.showExpiry && <div><strong>Scadenza:</strong> {state.expiry}</div>}
       </div>
-      </div>
+      {/* Bottone Instagram Story */}
+      <button
+        className="mt-6 px-6 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-yellow-400 text-white font-bold shadow-lg hover:scale-105 transition-transform"
+        onClick={handleInstagramStory}
+      >
+        Aggiungi a Instagram Story
+      </button>
+
+      {/* Modal Instagram Story */}
+      {showInstaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-xl p-6 max-w-[95vw] w-full max-w-md flex flex-col items-center relative">
+            <button className="absolute top-2 right-2 text-xl" onClick={() => setShowInstaModal(false)}>&times;</button>
+            <h2 className="text-lg font-bold mb-2">Condividi su Instagram Story</h2>
+            {instaImg && (
+              <img src={instaImg} alt="Anteprima coupon" className="w-full rounded-lg mb-4 border shadow" />
+            )}
+            <ol className="text-sm mb-3 list-decimal pl-4 text-left">
+              <li>Salva l'immagine sul tuo dispositivo (tieni premuto o clicca destro sull'immagine).</li>
+              <li>Apri Instagram e crea una nuova storia.</li>
+              <li>Seleziona l'immagine appena salvata come sfondo della storia.</li>
+            </ol>
+            <a
+              href={instaImg || '#'}
+              download="coupon-instagram.png"
+              className="inline-block px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 font-semibold mb-2"
+            >
+              Scarica immagine
+            </a>
+            <button
+              className="inline-block px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-800"
+              onClick={() => {
+                setShowInstaModal(false);
+                setInstaImg(null);
+              }}
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
